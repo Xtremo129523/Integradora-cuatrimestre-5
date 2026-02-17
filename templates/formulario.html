@@ -12,7 +12,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #0D3B66, #3E92CC);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             justify-content: center;
             padding: 40px 20px;
@@ -21,107 +21,235 @@
 
         .form-card {
             background-color: #ffffff;
-            padding: 40px 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             width: 100%;
-            max-width: 900px;
+            max-width: 1000px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         h1 {
             text-align: center;
+            margin-bottom: 15px;
+            color: #667eea;
+            font-size: 2.5em;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+
+        .section {
+            background: linear-gradient(145deg, #f8f9ff 0%, #ffffff 100%);
+            padding: 30px;
+            border-radius: 15px;
             margin-bottom: 30px;
-            color: #0D3B66;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
 
         h2 {
-            margin-top: 30px;
-            margin-bottom: 15px;
-            border-bottom: 3px solid #0D3B66;
-            padding-bottom: 5px;
-            color: #0D3B66;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #667eea;
+            color: #667eea;
+            font-size: 1.6em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-number {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
         }
 
         label {
             display: block;
-            margin-top: 10px;
-            font-weight: bold;
+            margin-bottom: 8px;
+            font-weight: 600;
             color: #333333;
+            font-size: 0.95em;
+        }
+
+        label::before {
+            content: "●";
+            color: #667eea;
+            margin-right: 8px;
+            font-size: 0.8em;
         }
 
         input[type="text"],
         input[type="number"],
+        input[type="date"],
+        select,
         textarea {
             width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            padding: 14px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
             outline: none;
-            transition: border-color 0.3s;
+            transition: all 0.3s ease;
+            font-size: 1em;
+            background-color: #ffffff;
         }
 
         input:focus,
-        textarea:focus {
-            border-color: #0D3B66;
+        textarea:focus,
+        select:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-2px);
         }
 
         textarea {
-            min-height: 60px;
+            min-height: 100px;
             resize: vertical;
+            font-family: inherit;
+        }
+
+        input::placeholder,
+        textarea::placeholder {
+            color: #aaa;
+            font-style: italic;
         }
 
         button {
             width: 100%;
-            padding: 16px;
-            background-color: #0D3B66;
+            padding: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            font-size: 18px;
+            font-size: 1.2em;
             font-weight: bold;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             cursor: pointer;
             margin-top: 30px;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
         }
 
         button:hover {
-            background-color: #095288;
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(-1px);
         }
 
         .nav-links {
             display: flex;
             justify-content: center;
-            gap: 20px;
-            margin-top: 25px;
+            gap: 30px;
+            margin-top: 30px;
+            flex-wrap: wrap;
         }
 
         .logout-link, .status-link {
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
             text-align: center;
-            color: #0D3B66;
-            font-weight: bold;
+            font-weight: 600;
             text-decoration: none;
+            border-radius: 10px;
+            transition: all 0.3s ease;
         }
 
-        .logout-link:hover, .status-link:hover {
-            text-decoration: underline;
+        .logout-link {
+            background-color: #fff;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .logout-link:hover {
+            background-color: #667eea;
+            color: white;
+            transform: translateY(-2px);
         }
 
         .status-link {
-            color: #FF6F00;
+            background: linear-gradient(135deg, #FF6F00, #FF8F00);
+            color: white;
+            border: 2px solid transparent;
+            box-shadow: 0 5px 15px rgba(255, 111, 0, 0.3);
+        }
+
+        .status-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 111, 0, 0.4);
         }
 
         .info-text {
             text-align: center;
-            margin-top: 10px;
-            font-size: 14px;
+            margin-top: 15px;
+            font-size: 0.95em;
             color: #666;
+            font-style: italic;
         }
 
-        @media (max-width: 600px) {
+        .required-indicator {
+            color: #e74c3c;
+            margin-left: 3px;
+        }
+
+        @media (max-width: 768px) {
             .form-card {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .section {
                 padding: 20px;
             }
         }
@@ -130,117 +258,194 @@
 <body>
 
 <div class="form-card">
-    <h1>Formulario de Emprendedores</h1>
+    <h1>🚀 Formulario de Emprendedores</h1>
+    <p class="subtitle">Completa tu información para participar en el programa de incubación</p>
 
     <form method="POST" action="/guardar_formulario">
 
         <!-- ================= INFORMACIÓN PERSONAL ================= -->
-        <h2>INFORMACIÓN PERSONAL</h2>
+        <div class="section">
+            <h2><span class="section-number">1</span> Información Personal</h2>
 
-        <label>Nombre completo</label>
-        <input type="text" name="nombre" required>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre completo <span class="required-indicator">*</span></label>
+                    <input type="text" name="nombre" placeholder="Ej: Juan Pérez García" required>
+                </div>
 
-        <label>Edad</label>
-        <input type="number" name="edad" required>
+                <div class="form-group">
+                    <label>Edad <span class="required-indicator">*</span></label>
+                    <input type="number" name="edad" placeholder="Ej: 22" min="18" max="99" required>
+                </div>
+            </div>
 
-        <label>Carrera</label>
-        <input type="text" name="carrera" required>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Carrera <span class="required-indicator">*</span></label>
+                    <input type="text" name="carrera" placeholder="Ej: Ingeniería en Sistemas" required>
+                </div>
 
-        <label>Nivel</label>
-        <input type="text" name="nivel" required>
+                <div class="form-group">
+                    <label>Nivel <span class="required-indicator">*</span></label>
+                    <input type="text" name="nivel" placeholder="Ej: 8vo cuatrimestre" required>
+                </div>
+            </div>
 
-        <label>Matrícula</label>
-        <input type="text" name="matricula" required>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Matrícula <span class="required-indicator">*</span></label>
+                    <input type="text" name="matricula" placeholder="Ej: 202304105" required>
+                </div>
 
-        <label>Asesor académico</label>
-        <input type="text" name="asesor" required>
+                <div class="form-group">
+                    <label>Número telefónico <span class="required-indicator">*</span></label>
+                    <input type="text" name="telefono" placeholder="Ej: 7441234567" required>
+                </div>
+            </div>
 
-        <label>Tutor</label>
-        <input type="text" name="tutor" required>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Asesor académico <span class="required-indicator">*</span></label>
+                    <input type="text" name="asesor" placeholder="Nombre del asesor" required>
+                </div>
 
-        <label>Número telefónico</label>
-        <input type="text" name="telefono" required>
+                <div class="form-group">
+                    <label>Tutor <span class="required-indicator">*</span></label>
+                    <input type="text" name="tutor" placeholder="Nombre del tutor" required>
+                </div>
+            </div>
 
-        <label>Dirección</label>
-        <input type="text" name="direccion" required>
+            <div class="form-group">
+                <label>Dirección <span class="required-indicator">*</span></label>
+                <input type="text" name="direccion" placeholder="Calle, número, colonia, ciudad" required>
+            </div>
 
-        <label>Número de integrantes en el equipo</label>
-        <input type="number" name="integrantes" required>
+            <div class="form-group">
+                <label>Número de integrantes en el equipo <span class="required-indicator">*</span></label>
+                <input type="number" name="integrantes" placeholder="Ej: 4" min="1" max="20" required>
+            </div>
+        </div>
 
         <!-- ================= EMPRENDIMIENTO ================= -->
-        <h2>INFORMACIÓN DEL EMPRENDIMIENTO</h2>
+        <div class="section">
+            <h2><span class="section-number">2</span> Información del Emprendimiento</h2>
 
-        <label>Breve descripción de tu idea de negocio</label>
-        <textarea name="descripcion" required></textarea>
+            <div class="form-group">
+                <label>Nombre del proyecto, producto o servicio <span class="required-indicator">*</span></label>
+                <input type="text" name="nombre_proyecto" placeholder="Ej: EcoApp - Aplicación de reciclaje" required>
+            </div>
 
-        <label>Ubicación del emprendimiento</label>
-        <textarea name="ubicacion" required></textarea>
+            <div class="form-group">
+                <label>Describe tu idea en 7 palabras <span class="required-indicator">*</span></label>
+                <input type="text" name="idea7" placeholder="Ej: Plataforma digital para optimizar reciclaje urbano" maxlength="100" required>
+            </div>
 
-        <label>Fecha de inicio del emprendimiento</label>
-        <input type="text" name="inicio_emprendimiento" required>
+            <div class="form-group">
+                <label>Breve descripción de tu idea de negocio <span class="required-indicator">*</span></label>
+                <textarea name="descripcion" placeholder="Describe detalladamente tu proyecto emprendedor..." required></textarea>
+            </div>
 
-        <label>Clientes/usuarios clave</label>
-        <textarea name="clientes" required></textarea>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Ubicación del emprendimiento <span class="required-indicator">*</span></label>
+                    <textarea name="ubicacion" placeholder="¿Dónde opera tu emprendimiento?" required></textarea>
+                </div>
 
-        <label>Problema que resuelven</label>
-        <textarea name="problema" required></textarea>
+                <div class="form-group">
+                    <label>Fecha de inicio del emprendimiento <span class="required-indicator">*</span></label>
+                    <input type="date" name="inicio_emprendimiento" required>
+                </div>
+            </div>
 
-        <label>Producto o servicio</label>
-        <textarea name="producto" required></textarea>
+            <div class="form-group">
+                <label>Clientes/usuarios clave <span class="required-indicator">*</span></label>
+                <textarea name="clientes" placeholder="¿Quiénes son tus clientes ideales?" required></textarea>
+            </div>
 
-        <label>Innovación de tu producto o servicio</label>
-        <textarea name="innovacion" required></textarea>
+            <div class="form-group">
+                <label>Problema que resuelven <span class="required-indicator">*</span></label>
+                <textarea name="problema" placeholder="¿Qué problema específico solucionas?" required></textarea>
+            </div>
 
-        <label>Cómo creas valor para tus clientes</label>
-        <textarea name="valor" required></textarea>
+            <div class="form-group">
+                <label>Producto o servicio <span class="required-indicator">*</span></label>
+                <textarea name="producto" placeholder="Describe tu producto o servicio en detalle" required></textarea>
+            </div>
 
-        <label>Describe tu idea en 7 palabras</label>
-        <input type="text" name="idea7" required>
+            <div class="form-group">
+                <label>Innovación de tu producto o servicio <span class="required-indicator">*</span></label>
+                <textarea name="innovacion" placeholder="¿Qué hace único a tu producto?" required></textarea>
+            </div>
 
-        <label>Nombre del proyecto, producto o servicio</label>
-        <input type="text" name="nombre_proyecto" required>
+            <div class="form-group">
+                <label>Cómo creas valor para tus clientes <span class="required-indicator">*</span></label>
+                <textarea name="valor" placeholder="¿Cómo beneficia a tus clientes?" required></textarea>
+            </div>
 
-        <label>¿Dado de alta ante el SAT?</label>
-        <input type="text" name="sat" required>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>¿Dado de alta ante el SAT? <span class="required-indicator">*</span></label>
+                    <input type="text" name="sat" placeholder="Sí / No" required>
+                </div>
 
-        <label>Personas que trabajan en el proyecto</label>
-        <input type="number" name="trabajadores" required>
+                <div class="form-group">
+                    <label>Personas que trabajan en el proyecto <span class="required-indicator">*</span></label>
+                    <input type="number" name="trabajadores" placeholder="Ej: 3" min="1" required>
+                </div>
+            </div>
 
-        <label>Miembros del equipo en programa de incubación</label>
-        <input type="number" name="incubacion" required>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Miembros del equipo en programa de incubación <span class="required-indicator">*</span></label>
+                    <input type="number" name="incubacion" placeholder="Ej: 2" min="0" required>
+                </div>
 
-        <label>Participación en convocatorias previas</label>
-        <input type="text" name="convocatoria" required>
+                <div class="form-group">
+                    <label>Participación en convocatorias previas <span class="required-indicator">*</span></label>
+                    <input type="text" name="convocatoria" placeholder="Sí / No - ¿Cuáles?" required>
+                </div>
+            </div>
+        </div>
 
         <!-- ================= LÍDER ================= -->
-        <h2>INFORMACIÓN DEL LÍDER DEL EQUIPO</h2>
+        <div class="section">
+            <h2><span class="section-number">3</span> Información del Líder del Equipo</h2>
 
-        <label>Descríbete</label>
-        <textarea name="lider_descripcion" required></textarea>
+            <div class="form-group">
+                <label>Descríbete <span class="required-indicator">*</span></label>
+                <textarea name="lider_descripcion" placeholder="Háblanos sobre ti, tu experiencia y motivación..." required></textarea>
+            </div>
 
-        <label>Rol en el emprendimiento</label>
-        <input type="text" name="rol" required>
+            <div class="form-group">
+                <label>Rol en el emprendimiento <span class="required-indicator">*</span></label>
+                <input type="text" name="rol" placeholder="Ej: CEO, Director de Tecnología" required>
+            </div>
 
-        <label>Habilidades</label>
-        <textarea name="habilidades" required></textarea>
+            <div class="form-group">
+                <label>Habilidades <span class="required-indicator">*</span></label>
+                <textarea name="habilidades" placeholder="Enumera tus principales habilidades y competencias..." required></textarea>
+            </div>
 
-        <label>Algo asombroso que hayas construido</label>
-        <textarea name="asombroso" required></textarea>
+            <div class="form-group">
+                <label>Algo asombroso que hayas construido <span class="required-indicator">*</span></label>
+                <textarea name="asombroso" placeholder="Cuéntanos sobre un logro o proyecto destacado..." required></textarea>
+            </div>
+        </div>
 
         <!-- ===== BOTÓN ===== -->
         <button type="submit">
-            Enviar formulario para revisión del administrador
+            ✓ Enviar Formulario para Revisión
         </button>
 
         <p class="info-text">
-            Una vez enviado, tu proyecto quedará en revisión.
+            Una vez enviado, tu proyecto quedará en revisión por el administrador.
         </p>
 
     </form>
 
     <div class="nav-links">
-        <a href="/estado_solicitud" class="status-link">Ver estado de mi solicitud</a>
-        <a href="/logout" class="logout-link">Cerrar sesión</a>
+        <a href="/estado_solicitud" class="status-link">📋 Ver Estado de Solicitud</a>
+        <a href="/logout" class="logout-link">🚪 Cerrar Sesión</a>
     </div>
 </div>
 
