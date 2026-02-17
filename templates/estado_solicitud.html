@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Estado de mi Solicitud</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0D3B66, #3E92CC);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 500px;
+            text-align: center;
+        }
+
+        h2 {
+            margin-bottom: 25px;
+            color: #0D3B66;
+        }
+
+        p {
+            margin: 10px 0;
+        }
+
+        .estado {
+            font-weight: bold;
+            font-size: 18px;
+            margin-top: 15px;
+        }
+
+        .pendiente {
+            color: orange;
+        }
+
+        .aceptado {
+            color: green;
+        }
+
+        .rechazado {
+            color: red;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 20px;
+            background-color: #0D3B66;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .btn:hover {
+            background-color: #095288;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Estado de mi Solicitud</h2>
+
+    {% if solicitud %}
+
+        <p><strong>Nombre:</strong> {{ solicitud.nombre }}</p>
+        <p><strong>Carrera:</strong> {{ solicitud.carrera }}</p>
+        <p><strong>Proyecto:</strong> {{ solicitud.descripcion_proyecto }}</p>
+
+        <p class="estado 
+            {% if solicitud.estado == 'Pendiente' %}pendiente
+            {% elif solicitud.estado == 'Aceptado' %}aceptado
+            {% elif solicitud.estado == 'Rechazado' %}rechazado
+            {% endif %}
+        ">
+            Estado: {{ solicitud.estado }}
+        </p>
+
+        {% if solicitud.estado == 'Aceptado' %}
+            <a href="{{ url_for('descargar_documento', id=solicitud.id) }}" class="btn">
+                Descargar Documento
+            </a>
+        {% endif %}
+
+    {% else %}
+        <p>No tienes ninguna solicitud registrada.</p>
+    {% endif %}
+
+    <br><br>
+    <a href="{{ url_for('logout') }}" class="btn">Cerrar sesión</a>
+</div>
+
+</body>
+</html>

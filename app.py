@@ -1,0 +1,340 @@
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
+import re
+import mysql.connector
+from datetime import datetime
+from functools import wraps
+import io
+from reportlab.pdfgen import canvas
+
+app = Flask(__name__)
+app.secret_key = "clave_super_secreta"
+
+DB_HOST = "127.0.0.1"
+DB_USER = "root"
+DB_PASSWORD = "6382"
+DB_NAME = "emprendedoress"
+DB_PORT = 3307
+
+# ================= CONEXIÓN =================
+def conexion():
+    return mysql.connector.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        database=DB_NAME,
+        port=DB_PORT
+    )
+
+
+def verificar_base_datos():
+    db = mysql.connector.connect(
+        host=DB_HOST,
+        user=DB_USER,
+        password=DB_PASSWORD,
+        port=DB_PORT
+    )
+    cursor = db.cursor()
+    try:
+        cursor.execute(
+            "SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME=%s",
+            (DB_NAME,)
+        )
+        if not cursor.fetchone():
+            raise RuntimeError(
+                "La base de datos no existe. Importa emprendedoress.sql antes de ejecutar Flask."
+            )
+    finally:
+        cursor.close()
+        db.close()
+
+# ================= DECORADORES =================
+def login_requerido(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if "usuario_id" not in session:
+            flash("Debes iniciar sesión.", "warning")
+            return redirect(url_for("login"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def solo_admin(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get("rol") != "admin":
+            flash("No tienes permiso para acceder aquí.", "danger")
+            return redirect(url_for("inicio"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+def solo_aceptado(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get("estado") != "aceptado":
+            flash("Tu solicitud aún no ha sido aceptada.", "warning")
+            return redirect(url_for("inicio"))
+        return f(*args, **kwargs)
+    return decorated_function
+
+
+# ================= LOGIN =================
+@app.route("/", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        correo = request.form["correo"]
+        password = request.form["password"]
+
+        db = conexion()
+        cursor = db.cursor(dictionary=True)
+
+        cursor.execute("SELECT * FROM usuarios WHERE correo=%s AND password=%s",
+                       (correo, password))
+        usuario = cursor.fetchone()
+
+        if usuario:
+            session["usuario_id"] = usuario["id"]
+            session["correo"] = usuario["correo"]
+            session["rol"] = usuario["rol"]
+            session["estado"] = usuario["estado"]
+
+            if usuario["rol"] == "admin":
+                return redirect(url_for("panel_admin"))
+
+            return redirect(url_for("inicio"))
+
+        flash("Usuario o contraseña incorrectos", "danger")
+        return redirect(url_for("login"))
+
+    return render_template("login.html")
+
+
+# ================= REGISTRO =================
+@app.route("/registro", methods=["GET", "POST"])
+def registro():
+    if request.method == "POST":
+        correo = request.form["correo"]
+        password = request.form["password"]
+
+        if not re.search(r"@utacapulco\.edu\.mx$", correo):
+            return render_template("registro.html", error="Usa tu correo institucional")
+
+        db = conexion()
+        cursor = db.cursor()
+
+        cursor.execute("SELECT id FROM usuarios WHERE correo=%s", (correo,))
+        if cursor.fetchone():
+            return render_template("registro.html", error="El usuario ya existe")
+
+        cursor.execute("""
+            INSERT INTO usuarios (correo, password, rol, estado)
+            VALUES (%s, %s, 'alumno', 'pendiente')
+        """, (correo, password))
+
+        db.commit()
+
+        flash("Cuenta creada correctamente. Ahora puedes iniciar sesión.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("registro.html")
+
+
+# ================= PANEL ADMIN =================
+@app.route("/panel_admin")
+@login_requerido
+@solo_admin
+def panel_admin():
+
+    db = conexion()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT s.*, u.correo 
+        FROM solicitudes s
+        JOIN usuarios u ON s.usuario_id = u.id
+    """)
+    solicitudes = cursor.fetchall()
+
+    return render_template("panel_admin.html", solicitudes=solicitudes)
+
+
+# ================= VER DETALLE SOLICITUD =================
+@app.route("/solicitud/<int:id>")
+@login_requerido
+@solo_admin
+def ver_solicitud(id):
+
+    db = conexion()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT s.*, u.correo
+        FROM solicitudes s
+        JOIN usuarios u ON s.usuario_id = u.id
+        WHERE s.id=%s
+    """, (id,))
+    solicitud = cursor.fetchone()
+
+    return render_template("detalle_solicitud_Admin.html", solicitud=solicitud)
+
+
+# ================= APROBAR =================
+@app.route("/aprobar/<int:id>")
+@login_requerido
+@solo_admin
+def aprobar(id):
+
+    db = conexion()
+    cursor = db.cursor()
+
+    cursor.execute("UPDATE solicitudes SET estado='aceptado' WHERE id=%s", (id,))
+    cursor.execute("""
+        UPDATE usuarios 
+        SET estado='aceptado' 
+        WHERE id = (SELECT usuario_id FROM solicitudes WHERE id=%s)
+    """, (id,))
+
+    db.commit()
+    return redirect(url_for("panel_admin"))
+
+
+# ================= RECHAZAR =================
+@app.route("/rechazar/<int:id>")
+@login_requerido
+@solo_admin
+def rechazar(id):
+
+    db = conexion()
+    cursor = db.cursor()
+
+    cursor.execute("UPDATE solicitudes SET estado='rechazado' WHERE id=%s", (id,))
+    cursor.execute("""
+        UPDATE usuarios 
+        SET estado='rechazado' 
+        WHERE id = (SELECT usuario_id FROM solicitudes WHERE id=%s)
+    """, (id,))
+
+    db.commit()
+    return redirect(url_for("panel_admin"))
+
+
+# ================= INICIO ALUMNO =================
+@app.route("/inicio")
+@login_requerido
+def inicio():
+
+    db = conexion()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("SELECT estado FROM usuarios WHERE id=%s", (session["usuario_id"],))
+    usuario = cursor.fetchone()
+
+    session["estado"] = usuario["estado"]
+
+    if usuario["estado"] == "aceptado":
+        return render_template("aceptado.html")
+
+    if usuario["estado"] == "rechazado":
+        return render_template("rechazado.html")
+
+    return render_template("formulario.html")
+
+
+# ================= GUARDAR FORMULARIO =================
+@app.route("/guardar_formulario", methods=["POST"])
+@login_requerido
+def guardar_formulario():
+
+    db = conexion()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        INSERT INTO solicitudes (
+            usuario_id,
+            nombre,
+            edad,
+            carrera,
+            nivel,
+            matricula,
+            asesor_academico,
+            tutor,
+            telefono,
+            direccion,
+            numero_integrantes,
+            descripcion_proyecto,
+            ubicacion_emprendimiento,
+            fecha_inicio_emprendimiento,
+            clientes_clave,
+            problema_resuelve,
+            producto_servicio,
+            innovacion,
+            creacion_valor,
+            idea_7_palabras,
+            nombre_proyecto,
+            alta_sat,
+            personas_trabajando,
+            miembros_incubacion,
+            convocatorias_previas,
+            descripcion_lider,
+            rol_emprendimiento,
+            habilidades,
+            logro_destacado,
+            fecha_creacion,
+            estado
+        )
+        VALUES (
+            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+            %s,%s,%s,%s,%s,%s,%s,%s,
+            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+            %s,'pendiente'
+        )
+    """, (
+        session["usuario_id"],
+        request.form["nombre"],
+        request.form["edad"],
+        request.form["carrera"],
+        request.form["nivel"],
+        request.form["matricula"],
+        request.form["asesor"],
+        request.form["tutor"],
+        request.form["telefono"],
+        request.form["direccion"],
+        request.form["integrantes"],
+        request.form["descripcion"],
+        request.form["ubicacion"],
+        request.form["inicio_emprendimiento"],
+        request.form["clientes"],
+        request.form["problema"],
+        request.form["producto"],
+        request.form["innovacion"],
+        request.form["valor"],
+        request.form["idea7"],
+        request.form["nombre_proyecto"],
+        request.form["sat"],
+        request.form["trabajadores"],
+        request.form["incubacion"],
+        request.form["convocatoria"],
+        request.form["lider_descripcion"],
+        request.form["rol"],
+        request.form["habilidades"],
+        request.form["asombroso"],
+        datetime.now()
+    ))
+
+    db.commit()
+
+    flash("Solicitud enviada correctamente.", "success")
+    return redirect(url_for("inicio"))
+
+
+# ================= LOGOUT =================
+@app.route("/logout")
+@login_requerido
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
+
+
+if __name__ == "__main__":
+    verificar_base_datos()
+    app.run(debug=True)

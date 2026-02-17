@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Formulario de Emprendedores</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0D3B66, #3E92CC);
+            display: flex;
+            justify-content: center;
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .form-card {
+            background-color: #ffffff;
+            padding: 40px 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 900px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #0D3B66;
+        }
+
+        h2 {
+            margin-top: 30px;
+            margin-bottom: 15px;
+            border-bottom: 3px solid #0D3B66;
+            padding-bottom: 5px;
+            color: #0D3B66;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            font-weight: bold;
+            color: #333333;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            margin-top: 6px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input:focus,
+        textarea:focus {
+            border-color: #0D3B66;
+        }
+
+        textarea {
+            min-height: 60px;
+            resize: vertical;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background-color: #0D3B66;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 30px;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #095288;
+        }
+
+        .logout-link {
+            display: block;
+            text-align: center;
+            margin-top: 25px;
+            color: #0D3B66;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .logout-link:hover {
+            text-decoration: underline;
+        }
+
+        .info-text {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .form-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="form-card">
+    <h1>Formulario de Emprendedores</h1>
+
+    <form method="POST" action="/guardar_formulario">
+
+        <!-- ================= INFORMACIÓN PERSONAL ================= -->
+        <h2>INFORMACIÓN PERSONAL</h2>
+
+        <label>Nombre completo</label>
+        <input type="text" name="nombre" required>
+
+        <label>Edad</label>
+        <input type="number" name="edad" required>
+
+        <label>Carrera</label>
+        <input type="text" name="carrera" required>
+
+        <label>Nivel</label>
+        <input type="text" name="nivel" required>
+
+        <label>Matrícula</label>
+        <input type="text" name="matricula" required>
+
+        <label>Asesor académico</label>
+        <input type="text" name="asesor" required>
+
+        <label>Tutor</label>
+        <input type="text" name="tutor" required>
+
+        <label>Número telefónico</label>
+        <input type="text" name="telefono" required>
+
+        <label>Dirección</label>
+        <input type="text" name="direccion" required>
+
+        <label>Número de integrantes en el equipo</label>
+        <input type="number" name="integrantes" required>
+
+        <!-- ================= EMPRENDIMIENTO ================= -->
+        <h2>INFORMACIÓN DEL EMPRENDIMIENTO</h2>
+
+        <label>Breve descripción de tu idea de negocio</label>
+        <textarea name="descripcion" required></textarea>
+
+        <label>Ubicación del emprendimiento</label>
+        <textarea name="ubicacion" required></textarea>
+
+        <label>Fecha de inicio del emprendimiento</label>
+        <input type="text" name="inicio_emprendimiento" required>
+
+        <label>Clientes/usuarios clave</label>
+        <textarea name="clientes" required></textarea>
+
+        <label>Problema que resuelven</label>
+        <textarea name="problema" required></textarea>
+
+        <label>Producto o servicio</label>
+        <textarea name="producto" required></textarea>
+
+        <label>Innovación de tu producto o servicio</label>
+        <textarea name="innovacion" required></textarea>
+
+        <label>Cómo creas valor para tus clientes</label>
+        <textarea name="valor" required></textarea>
+
+        <label>Describe tu idea en 7 palabras</label>
+        <input type="text" name="idea7" required>
+
+        <label>Nombre del proyecto, producto o servicio</label>
+        <input type="text" name="nombre_proyecto" required>
+
+        <label>¿Dado de alta ante el SAT?</label>
+        <input type="text" name="sat" required>
+
+        <label>Personas que trabajan en el proyecto</label>
+        <input type="number" name="trabajadores" required>
+
+        <label>Miembros del equipo en programa de incubación</label>
+        <input type="number" name="incubacion" required>
+
+        <label>Participación en convocatorias previas</label>
+        <input type="text" name="convocatoria" required>
+
+        <!-- ================= LÍDER ================= -->
+        <h2>INFORMACIÓN DEL LÍDER DEL EQUIPO</h2>
+
+        <label>Descríbete</label>
+        <textarea name="lider_descripcion" required></textarea>
+
+        <label>Rol en el emprendimiento</label>
+        <input type="text" name="rol" required>
+
+        <label>Habilidades</label>
+        <textarea name="habilidades" required></textarea>
+
+        <label>Algo asombroso que hayas construido</label>
+        <textarea name="asombroso" required></textarea>
+
+        <!-- ===== BOTÓN ===== -->
+        <button type="submit">
+            Enviar formulario para revisión del administrador
+        </button>
+
+        <p class="info-text">
+            Una vez enviado, tu proyecto quedará en revisión.
+        </p>
+
+    </form>
+
+    <a href="/logout" class="logout-link">Cerrar sesión</a>
+</div>
+
+</body>
+</html>
+

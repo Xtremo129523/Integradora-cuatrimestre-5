@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel Administrador</title>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0D3B66, #3E92CC);
+            margin: 0;
+            padding: 30px;
+        }
+
+        h2 {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background-color: #0D3B66;
+            color: white;
+            padding: 12px;
+        }
+
+        td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background-color: #f2f2f2;
+        }
+
+        /* Colores por estado */
+        .pendiente {
+            background-color: #fff3cd;
+        }
+
+        .aceptado {
+            background-color: #d4edda;
+        }
+
+        .rechazado {
+            background-color: #f8d7da;
+        }
+
+        .estado-badge {
+            padding: 5px 10px;
+            border-radius: 8px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .badge-pendiente { background-color: orange; }
+        .badge-aceptado { background-color: green; }
+        .badge-rechazado { background-color: red; }
+
+        a {
+            text-decoration: none;
+            font-weight: bold;
+        }
+
+        .ver { color: #0D3B66; }
+        .aceptar { color: green; }
+        .rechazar { color: red; }
+
+        .mensaje {
+            background: #e2f0ff;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .logout {
+            margin-top: 20px;
+            display: block;
+            text-align: right;
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Panel del Administrador</h2>
+
+<div class="container">
+
+    <h3>Solicitudes recibidas</h3>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="mensaje">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <table>
+        <tr>
+            <th>Correo</th>
+            <th>Nombre</th>
+            <th>Carrera</th>
+            <th>Proyecto</th>
+            <th>Estado</th>
+            <th>Acciones</th>
+        </tr>
+
+        {% for s in solicitudes %}
+        <tr class="
+            {% if s.estado == 'pendiente' %}pendiente
+            {% elif s.estado == 'aceptado' %}aceptado
+            {% elif s.estado == 'rechazado' %}rechazado
+            {% endif %}
+        ">
+            <td>{{ s.correo }}</td>
+            <td>{{ s.nombre }}</td>
+            <td>{{ s.carrera }}</td>
+            <td>{{ s.descripcion_proyecto }}</td>
+            <td>
+                <span class="estado-badge
+                    {% if s.estado == 'pendiente' %}badge-pendiente
+                    {% elif s.estado == 'aceptado' %}badge-aceptado
+                    {% elif s.estado == 'rechazado' %}badge-rechazado
+                    {% endif %}
+                ">
+                    {{ s.estado | upper }}
+                </span>
+            </td>
+            <td>
+                <a class="ver" href="{{ url_for('ver_solicitud', id=s.id) }}">Ver</a> |
+                <a class="aceptar" href="{{ url_for('aprobar', id=s.id) }}">Aceptar</a> |
+                <a class="rechazar" href="{{ url_for('rechazar', id=s.id) }}">Rechazar</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+
+</div>
+
+<a href="{{ url_for('logout') }}" class="logout">Cerrar sesión</a>
+
+</body>
+</html>

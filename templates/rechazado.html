@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Solicitud Rechazada</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #8B0000, #FF4C4C);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        h2 {
+            color: #8B0000;
+        }
+
+        p {
+            margin: 15px 0;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 20px;
+            background-color: #8B0000;
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+        }
+
+        .btn:hover {
+            background-color: #600000;
+        }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Solicitud Rechazada</h2>
+    <p>Lamentamos informarte que tu solicitud no fue aprobada.</p>
+    <p>Para más información, contacta al administrador.</p>
+
+    <a href="{{ url_for('logout') }}" class="btn">Cerrar sesión</a>
+</div>
+
+</body>
+</html>

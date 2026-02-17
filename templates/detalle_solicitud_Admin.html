@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Detalle de Solicitud</title>
+    <style>
+        body { font-family: Arial; padding: 30px; }
+        h2 { text-align: center; }
+        .seccion { margin-bottom: 30px; padding: 15px; border: 1px solid #ccc; border-radius: 8px; }
+        .seccion h3 { background: #f4f4f4; padding: 8px; border-radius: 5px; }
+        p { margin: 5px 0; }
+        .botones { margin-top: 20px; }
+    </style>
+</head>
+<body>
+
+<h2>Detalle Completo de la Solicitud</h2>
+
+{% if solicitud %}
+
+<div class="seccion">
+    <h3>Información Personal</h3>
+    <p><strong>Correo:</strong> {{ solicitud.correo }}</p>
+    <p><strong>Nombre:</strong> {{ solicitud.nombre }}</p>
+    <p><strong>Edad:</strong> {{ solicitud.edad }}</p>
+    <p><strong>Carrera:</strong> {{ solicitud.carrera }}</p>
+    <p><strong>Nivel:</strong> {{ solicitud.nivel }}</p>
+    <p><strong>Matrícula:</strong> {{ solicitud.matricula }}</p>
+    <p><strong>Asesor Académico:</strong> {{ solicitud.asesor_academico }}</p>
+    <p><strong>Tutor:</strong> {{ solicitud.tutor }}</p>
+    <p><strong>Teléfono:</strong> {{ solicitud.telefono }}</p>
+    <p><strong>Dirección:</strong> {{ solicitud.direccion }}</p>
+    <p><strong>Número de Integrantes:</strong> {{ solicitud.numero_integrantes }}</p>
+</div>
+
+<div class="seccion">
+    <h3>Información del Emprendimiento</h3>
+    <p><strong>Nombre del Proyecto:</strong> {{ solicitud.nombre_proyecto }}</p>
+    <p><strong>Descripción:</strong> {{ solicitud.descripcion_proyecto }}</p>
+    <p><strong>Ubicación:</strong> {{ solicitud.ubicacion_emprendimiento }}</p>
+    <p><strong>Fecha de Inicio:</strong> {{ solicitud.fecha_inicio_emprendimiento }}</p>
+    <p><strong>Clientes Clave:</strong> {{ solicitud.clientes_clave }}</p>
+    <p><strong>Problema que Resuelve:</strong> {{ solicitud.problema_resuelve }}</p>
+    <p><strong>Producto o Servicio:</strong> {{ solicitud.producto_servicio }}</p>
+    <p><strong>Innovación:</strong> {{ solicitud.innovacion }}</p>
+    <p><strong>Creación de Valor:</strong> {{ solicitud.creacion_valor }}</p>
+    <p><strong>Idea en 7 palabras:</strong> {{ solicitud.idea_7_palabras }}</p>
+    <p><strong>Dado de Alta en SAT:</strong> {{ solicitud.alta_sat }}</p>
+    <p><strong>Personas Trabajando:</strong> {{ solicitud.personas_trabajando }}</p>
+    <p><strong>Miembros en Incubación:</strong> {{ solicitud.miembros_incubacion }}</p>
+    <p><strong>Convocatorias Previas:</strong> {{ solicitud.convocatorias_previas }}</p>
+</div>
+
+<div class="seccion">
+    <h3>Información del Líder</h3>
+    <p><strong>Descripción:</strong> {{ solicitud.descripcion_lider }}</p>
+    <p><strong>Rol:</strong> {{ solicitud.rol_emprendimiento }}</p>
+    <p><strong>Habilidades:</strong> {{ solicitud.habilidades }}</p>
+    <p><strong>Logro Destacado:</strong> {{ solicitud.logro_destacado }}</p>
+</div>
+
+<div class="seccion">
+    <h3>Estado</h3>
+    <p><strong>Fecha de Creación:</strong> {{ solicitud.fecha_creacion }}</p>
+    <p><strong>Estado:</strong> {{ solicitud.estado }}</p>
+    <p><strong>Motivo de Rechazo:</strong> {{ solicitud.motivo_rechazo }}</p>
+</div>
+
+<div class="botones">
+    <a href="{{ url_for('aprobar', id=solicitud.id) }}">Aceptar</a> |
+    <a href="{{ url_for('rechazar', id=solicitud.id) }}">Rechazar</a> |
+    <a href="{{ url_for('panel_admin') }}">Volver al Panel</a>
+</div>
+
+{% else %}
+<p>Solicitud no encontrada.</p>
+{% endif %}
+
+</body>
+</html>
