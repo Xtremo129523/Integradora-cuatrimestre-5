@@ -72,7 +72,7 @@ def solo_aceptado(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if session.get("estado") != "aceptado":
-            flash("Tu solicitud aún no ha sido aceptada.", "warning")
+            flash("⚠️ Acceso restringido: Solo usuarios con solicitud ACEPTADA pueden acceder a esta función.", "warning")
             return redirect(url_for("inicio"))
         return f(*args, **kwargs)
     return decorated_function
@@ -220,14 +220,25 @@ def aprobar(id):
     db = conexion()
     cursor = db.cursor()
 
-    cursor.execute("UPDATE solicitudes SET estado='aceptado' WHERE id=%s", (id,))
-    cursor.execute("""
-        UPDATE usuarios 
-        SET estado='aceptado' 
-        WHERE id = (SELECT usuario_id FROM solicitudes WHERE id=%s)
-    """, (id,))
+    try:
+        cursor.execute("UPDATE solicitudes SET estado='aceptado' WHERE id=%s", (id,))
+        cursor.execute("""
+            UPDATE usuarios 
+            SET estado='aceptado' 
+            WHERE id = (SELECT usuario_id FROM solicitudes WHERE id=%s)
+        """, (id,))
 
-    db.commit()
+        db.commit()
+        flash("✓ Solicitud aprobada exitosamente", "success")
+    
+    except Exception as e:
+        db.rollback()
+        flash(f"❌ Error al aprobar la solicitud: {str(e)}", "danger")
+    
+    finally:
+        cursor.close()
+        db.close()
+
     return redirect(url_for("panel_admin"))
 
 
@@ -240,14 +251,25 @@ def rechazar(id):
     db = conexion()
     cursor = db.cursor()
 
-    cursor.execute("UPDATE solicitudes SET estado='rechazado' WHERE id=%s", (id,))
-    cursor.execute("""
-        UPDATE usuarios 
-        SET estado='rechazado' 
-        WHERE id = (SELECT usuario_id FROM solicitudes WHERE id=%s)
-    """, (id,))
+    try:
+        cursor.execute("UPDATE solicitudes SET estado='rechazado' WHERE id=%s", (id,))
+        cursor.execute("""
+            UPDATE usuarios 
+            SET estado='rechazado' 
+            WHERE id = (SELECT usuario_id FROM solicitudes WHERE id=%s)
+        """, (id,))
 
-    db.commit()
+        db.commit()
+        flash("✓ Solicitud rechazada exitosamente", "success")
+    
+    except Exception as e:
+        db.rollback()
+        flash(f"❌ Error al rechazar la solicitud: {str(e)}", "danger")
+    
+    finally:
+        cursor.close()
+        db.close()
+
     return redirect(url_for("panel_admin"))
 
 
@@ -259,17 +281,27 @@ def inicio():
     db = conexion()
     cursor = db.cursor(dictionary=True)
 
+    # Actualizar el estado del usuario desde la BD
     cursor.execute("SELECT estado FROM usuarios WHERE id=%s", (session["usuario_id"],))
     usuario = cursor.fetchone()
+    cursor.close()
+    db.close()
 
+    if not usuario:
+        flash("Error al obtener información del usuario", "danger")
+        return redirect(url_for("logout"))
+
+    # Actualizar estado en la sesión
     session["estado"] = usuario["estado"]
 
+    # Redirigir según el estado
     if usuario["estado"] == "aceptado":
         return render_template("aceptado.html")
 
     if usuario["estado"] == "rechazado":
         return render_template("rechazado.html")
 
+    # Estado pendiente - mostrar formulario
     return render_template("formulario.html")
 
 
@@ -278,85 +310,99 @@ def inicio():
 @login_requerido
 def guardar_formulario():
 
+    # Validar que el usuario tenga estado pendiente
+    if session.get("estado") != "pendiente":
+        flash("⚠️ No puedes enviar una nueva solicitud. Tu estado actual es: " + session.get("estado", "desconocido"), "warning")
+        return redirect(url_for("inicio"))
+
     db = conexion()
     cursor = db.cursor()
 
-    cursor.execute("""
-        INSERT INTO solicitudes (
-            usuario_id,
-            nombre,
-            edad,
-            carrera,
-            nivel,
-            matricula,
-            asesor_academico,
-            tutor,
-            telefono,
-            direccion,
-            numero_integrantes,
-            descripcion_proyecto,
-            ubicacion_emprendimiento,
-            fecha_inicio_emprendimiento,
-            clientes_clave,
-            problema_resuelve,
-            producto_servicio,
-            innovacion,
-            creacion_valor,
-            idea_7_palabras,
-            nombre_proyecto,
-            alta_sat,
-            personas_trabajando,
-            miembros_incubacion,
-            convocatorias_previas,
-            descripcion_lider,
-            rol_emprendimiento,
-            habilidades,
-            logro_destacado,
-            fecha_creacion,
-            estado
-        )
-        VALUES (
-            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-            %s,%s,%s,%s,%s,%s,%s,%s,
-            %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-            %s,'pendiente'
-        )
-    """, (
-        session["usuario_id"],
-        request.form["nombre"],
-        request.form["edad"],
-        request.form["carrera"],
-        request.form["nivel"],
-        request.form["matricula"],
-        request.form["asesor"],
-        request.form["tutor"],
-        request.form["telefono"],
-        request.form["direccion"],
-        request.form["integrantes"],
-        request.form["descripcion"],
-        request.form["ubicacion"],
-        request.form["inicio_emprendimiento"],
-        request.form["clientes"],
-        request.form["problema"],
-        request.form["producto"],
-        request.form["innovacion"],
-        request.form["valor"],
-        request.form["idea7"],
-        request.form["nombre_proyecto"],
-        request.form["sat"],
-        request.form["trabajadores"],
-        request.form["incubacion"],
-        request.form["convocatoria"],
-        request.form["lider_descripcion"],
-        request.form["rol"],
-        request.form["habilidades"],
-        request.form["asombroso"],
-        datetime.now()
-    ))
+    try:
+        cursor.execute("""
+            INSERT INTO solicitudes (
+                usuario_id,
+                nombre,
+                edad,
+                carrera,
+                nivel,
+                matricula,
+                asesor_academico,
+                tutor,
+                telefono,
+                direccion,
+                numero_integrantes,
+                descripcion_proyecto,
+                ubicacion_emprendimiento,
+                fecha_inicio_emprendimiento,
+                clientes_clave,
+                problema_resuelve,
+                producto_servicio,
+                innovacion,
+                creacion_valor,
+                idea_7_palabras,
+                nombre_proyecto,
+                alta_sat,
+                personas_trabajando,
+                miembros_incubacion,
+                convocatorias_previas,
+                descripcion_lider,
+                rol_emprendimiento,
+                habilidades,
+                logro_destacado,
+                fecha_creacion,
+                estado
+            )
+            VALUES (
+                %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                %s,%s,%s,%s,%s,%s,%s,%s,
+                %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                %s,'pendiente'
+            )
+        """, (
+            session["usuario_id"],
+            request.form["nombre"],
+            request.form["edad"],
+            request.form["carrera"],
+            request.form["nivel"],
+            request.form["matricula"],
+            request.form["asesor"],
+            request.form["tutor"],
+            request.form["telefono"],
+            request.form["direccion"],
+            request.form["integrantes"],
+            request.form["descripcion"],
+            request.form["ubicacion"],
+            request.form["inicio_emprendimiento"],
+            request.form["clientes"],
+            request.form["problema"],
+            request.form["producto"],
+            request.form["innovacion"],
+            request.form["valor"],
+            request.form["idea7"],
+            request.form["nombre_proyecto"],
+            request.form["sat"],
+            request.form["trabajadores"],
+            request.form["incubacion"],
+            request.form["convocatoria"],
+            request.form["lider_descripcion"],
+            request.form["rol"],
+            request.form["habilidades"],
+            request.form["asombroso"],
+            datetime.now()
+        ))
 
-    db.commit()
+        db.commit()
+        flash("✓ Solicitud enviada correctamente. El administrador la revisará pronto.", "success")
+    
+    except Exception as e:
+        db.rollback()
+        flash(f"❌ Error al guardar la solicitud: {str(e)}", "danger")
+    
+    finally:
+        cursor.close()
+        db.close()
 
-    flash("Solicitud enviada correctamente.", "success")
     return redirect(url_for("inicio"))
 
 
@@ -384,6 +430,7 @@ def estado_solicitud():
 # ================= DESCARGAR DOCUMENTO =================
 @app.route("/descargar_documento/<int:id>")
 @login_requerido
+@solo_aceptado
 def descargar_documento(id):
     db = conexion()
     cursor = db.cursor(dictionary=True)
@@ -392,7 +439,7 @@ def descargar_documento(id):
         SELECT s.*, u.correo 
         FROM solicitudes s
         JOIN usuarios u ON s.usuario_id = u.id
-        WHERE s.id=%s AND s.usuario_id=%s
+        WHERE s.id=%s AND s.usuario_id=%s AND s.estado='aceptado'
     """, (id, session["usuario_id"]))
     
     solicitud = cursor.fetchone()

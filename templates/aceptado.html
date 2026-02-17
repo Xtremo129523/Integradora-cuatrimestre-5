@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Solicitud Rechazada</title>
+    <title>Solicitud Aceptada</title>
     <style>
         * {
             margin: 0;
@@ -12,7 +12,7 @@
         }
 
         body {
-            background: linear-gradient(135deg, #eb3349, #f45c43);
+            background: linear-gradient(135deg, #11998e, #38ef7d);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -36,14 +36,14 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        .error-icon {
+        .success-icon {
             font-size: 80px;
-            color: #eb3349;
+            color: #11998e;
             margin-bottom: 20px;
         }
 
         h1 {
-            color: #eb3349;
+            color: #11998e;
             margin-bottom: 15px;
             font-size: 2.2em;
         }
@@ -56,11 +56,11 @@
         }
 
         .info-box {
-            background: linear-gradient(145deg, #fee2e2, #fecaca);
+            background: linear-gradient(145deg, #f0fdf4, #dcfce7);
             padding: 25px;
             border-radius: 15px;
             margin: 30px 0;
-            border-left: 5px solid #eb3349;
+            border-left: 5px solid #11998e;
         }
 
         .info-box p {
@@ -70,7 +70,7 @@
         }
 
         .info-box strong {
-            color: #eb3349;
+            color: #11998e;
         }
 
         .actions {
@@ -93,27 +93,36 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, #eb3349, #f45c43);
+            background: linear-gradient(135deg, #11998e, #38ef7d);
         }
 
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(235, 51, 73, 0.4);
+            box-shadow: 0 8px 20px rgba(17, 153, 142, 0.4);
         }
 
         .btn-secondary {
-            background-color: #fff;
-            color: #eb3349;
-            border: 2px solid #eb3349;
+            background: linear-gradient(135deg, #667eea, #764ba2);
         }
 
         .btn-secondary:hover {
-            background-color: #eb3349;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-logout {
+            background-color: #fff;
+            color: #11998e;
+            border: 2px solid #11998e;
+        }
+
+        .btn-logout:hover {
+            background-color: #11998e;
             color: white;
             transform: translateY(-2px);
         }
 
-        .status-text {
+        .welcome-text {
             font-size: 1.1em;
             color: #555;
             margin: 20px 0;
@@ -129,7 +138,7 @@
                 font-size: 1.8em;
             }
 
-            .error-icon {
+            .success-icon {
                 font-size: 60px;
             }
         }
@@ -138,28 +147,31 @@
 <body>
 
 <div class="card">
-    <div class="error-icon">✗</div>
-    <h1>Solicitud No Aprobada</h1>
-    <h2>Tu solicitud no fue aceptada en esta ocasión</h2>
+    <div class="success-icon">✓</div>
+    <h1>¡Felicidades!</h1>
+    <h2>Tu solicitud ha sido aceptada</h2>
 
     <div class="info-box">
-        <p><strong>📋 Información Importante</strong></p>
-        <p>Lamentamos informarte que tu solicitud al programa de incubación de emprendedores no fue aprobada.</p>
-        <p>Te invitamos a revisar los requisitos y volver a aplicar en futuras convocatorias.</p>
-        <p>Para más información, contacta al administrador del programa.</p>
+        <p><strong>🎉 Bienvenido al Programa de Incubación de Emprendedores</strong></p>
+        <p>Tu solicitud ha sido revisada y aprobada por el administrador.</p>
+        <p>Ahora tienes acceso completo a todas las funcionalidades del programa.</p>
     </div>
 
-    <p class="status-text">
+    <p class="welcome-text">
         Correo: <strong>{{ session.correo }}</strong><br>
-        Estado: <strong style="color: #eb3349;">RECHAZADO</strong>
+        Estado: <strong style="color: #11998e;">ACEPTADO</strong>
     </p>
 
     <div class="actions">
         <a href="{{ url_for('estado_solicitud') }}" class="btn btn-primary">
-            📋 Ver Detalles de mi Solicitud
+            📋 Ver Estado de mi Solicitud
+        </a>
+        
+        <a href="{{ url_for('inicio') }}" class="btn btn-secondary">
+            🏠 Ir al Inicio
         </a>
 
-        <a href="{{ url_for('logout') }}" class="btn btn-secondary">
+        <a href="{{ url_for('logout') }}" class="btn btn-logout">
             🚪 Cerrar Sesión
         </a>
     </div>
