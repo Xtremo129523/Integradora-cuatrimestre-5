@@ -74,10 +74,21 @@
         }
 
         .error {
-            color: red;
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 12px;
+            border-radius: 8px;
             text-align: center;
-            margin-top: 10px;
+            margin-bottom: 20px;
             font-weight: bold;
+            animation: shake 0.3s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
 
         @media (max-width: 500px) {

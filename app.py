@@ -82,29 +82,49 @@ def solo_aceptado(f):
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        correo = request.form["correo"]
-        password = request.form["password"]
+        correo = request.form.get("correo", "").strip()
+        password = request.form.get("password", "").strip()
+
+        # Validación de campos vacíos
+        if not correo or not password:
+            flash("Por favor, completa todos los campos", "danger")
+            return redirect(url_for("login"))
 
         db = conexion()
         cursor = db.cursor(dictionary=True)
 
-        cursor.execute("SELECT * FROM usuarios WHERE correo=%s AND password=%s",
-                       (correo, password))
+        # Primero verificar si el usuario existe
+        cursor.execute("SELECT * FROM usuarios WHERE correo=%s", (correo,))
         usuario = cursor.fetchone()
 
-        if usuario:
-            session["usuario_id"] = usuario["id"]
-            session["correo"] = usuario["correo"]
-            session["rol"] = usuario["rol"]
-            session["estado"] = usuario["estado"]
+        if not usuario:
+            flash("El correo ingresado no está registrado", "danger")
+            cursor.close()
+            db.close()
+            return redirect(url_for("login"))
 
-            if usuario["rol"] == "admin":
-                return redirect(url_for("panel_admin"))
+        # Verificar la contraseña
+        if usuario["password"] != password:
+            flash("Contraseña incorrecta", "danger")
+            cursor.close()
+            db.close()
+            return redirect(url_for("login"))
 
-            return redirect(url_for("inicio"))
+        # Credenciales correctas
+        session["usuario_id"] = usuario["id"]
+        session["correo"] = usuario["correo"]
+        session["rol"] = usuario["rol"]
+        session["estado"] = usuario["estado"]
 
-        flash("Usuario o contraseña incorrectos", "danger")
-        return redirect(url_for("login"))
+        cursor.close()
+        db.close()
+
+        if usuario["rol"] == "admin":
+            flash(f"Bienvenido, {correo}", "success")
+            return redirect(url_for("panel_admin"))
+
+        flash(f"Bienvenido, {correo}", "success")
+        return redirect(url_for("inicio"))
 
     return render_template("login.html")
 
@@ -113,18 +133,29 @@ def login():
 @app.route("/registro", methods=["GET", "POST"])
 def registro():
     if request.method == "POST":
-        correo = request.form["correo"]
-        password = request.form["password"]
+        correo = request.form.get("correo", "").strip()
+        password = request.form.get("password", "").strip()
 
+        # Validación de campos vacíos
+        if not correo or not password:
+            return render_template("registro.html", error="Por favor, completa todos los campos")
+
+        # Validación de correo institucional
         if not re.search(r"@utacapulco\.edu\.mx$", correo):
-            return render_template("registro.html", error="Usa tu correo institucional")
+            return render_template("registro.html", error="Debes usar tu correo institucional (@utacapulco.edu.mx)")
+
+        # Validación de longitud de contraseña
+        if len(password) < 6:
+            return render_template("registro.html", error="La contraseña debe tener al menos 6 caracteres")
 
         db = conexion()
         cursor = db.cursor()
 
         cursor.execute("SELECT id FROM usuarios WHERE correo=%s", (correo,))
         if cursor.fetchone():
-            return render_template("registro.html", error="El usuario ya existe")
+            cursor.close()
+            db.close()
+            return render_template("registro.html", error="Este correo ya está registrado. Inicia sesión.")
 
         cursor.execute("""
             INSERT INTO usuarios (correo, password, rol, estado)
@@ -132,8 +163,10 @@ def registro():
         """, (correo, password))
 
         db.commit()
+        cursor.close()
+        db.close()
 
-        flash("Cuenta creada correctamente. Ahora puedes iniciar sesión.", "success")
+        flash("✓ Cuenta creada correctamente. Ahora puedes iniciar sesión.", "success")
         return redirect(url_for("login"))
 
     return render_template("registro.html")
