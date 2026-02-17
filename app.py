@@ -360,6 +360,93 @@ def guardar_formulario():
     return redirect(url_for("inicio"))
 
 
+# ================= ESTADO SOLICITUD =================
+@app.route("/estado_solicitud")
+@login_requerido
+def estado_solicitud():
+    db = conexion()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT * FROM solicitudes 
+        WHERE usuario_id=%s 
+        ORDER BY fecha_creacion DESC 
+        LIMIT 1
+    """, (session["usuario_id"],))
+    
+    solicitud = cursor.fetchone()
+    cursor.close()
+    db.close()
+
+    return render_template("estado_solicitud.html", solicitud=solicitud)
+
+
+# ================= DESCARGAR DOCUMENTO =================
+@app.route("/descargar_documento/<int:id>")
+@login_requerido
+def descargar_documento(id):
+    db = conexion()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT s.*, u.correo 
+        FROM solicitudes s
+        JOIN usuarios u ON s.usuario_id = u.id
+        WHERE s.id=%s AND s.usuario_id=%s
+    """, (id, session["usuario_id"]))
+    
+    solicitud = cursor.fetchone()
+    cursor.close()
+    db.close()
+
+    if not solicitud:
+        flash("No tienes permiso para descargar este documento", "danger")
+        return redirect(url_for("inicio"))
+
+    # Generar PDF
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer)
+    
+    # Título
+    pdf.setFont("Helvetica-Bold", 16)
+    pdf.drawString(50, 800, "SOLICITUD DE INSCRIPCIÓN - EMPRENDEDORES")
+    
+    # Contenido
+    pdf.setFont("Helvetica", 10)
+    y = 770
+    
+    campos = [
+        ("Nombre:", solicitud.get("nombre", "N/A")),
+        ("Email:", solicitud.get("correo", "N/A")),
+        ("Edad:", str(solicitud.get("edad", "N/A"))),
+        ("Carrera:", solicitud.get("carrera", "N/A")),
+        ("Nivel:", solicitud.get("nivel", "N/A")),
+        ("Matrícula:", solicitud.get("matricula", "N/A")),
+        ("Teléfono:", solicitud.get("telefono", "N/A")),
+        ("Proyecto:", solicitud.get("nombre_proyecto", "N/A")),
+        ("Descripción:", solicitud.get("descripcion_proyecto", "N/A")[:80] + "..."),
+        ("Estado:", solicitud.get("estado", "N/A").upper()),
+    ]
+    
+    for campo, valor in campos:
+        pdf.drawString(50, y, f"{campo} {valor}")
+        y -= 20
+    
+    pdf.drawString(50, y - 20, f"Fecha de solicitud: {solicitud.get('fecha_creacion', 'N/A')}")
+    
+    pdf.showPage()
+    pdf.save()
+    
+    buffer.seek(0)
+    
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"solicitud_{id}.pdf",
+        mimetype="application/pdf"
+    )
+
+
 # ================= LOGOUT =================
 @app.route("/logout")
 @login_requerido

@@ -74,18 +74,19 @@
 
         <p><strong>Nombre:</strong> {{ solicitud.nombre }}</p>
         <p><strong>Carrera:</strong> {{ solicitud.carrera }}</p>
-        <p><strong>Proyecto:</strong> {{ solicitud.descripcion_proyecto }}</p>
+        <p><strong>Proyecto:</strong> {{ solicitud.nombre_proyecto }}</p>
+        <p><strong>Descripción:</strong> {{ solicitud.descripcion_proyecto[:100] }}...</p>
 
         <p class="estado 
-            {% if solicitud.estado == 'Pendiente' %}pendiente
-            {% elif solicitud.estado == 'Aceptado' %}aceptado
-            {% elif solicitud.estado == 'Rechazado' %}rechazado
+            {% if solicitud.estado == 'pendiente' %}pendiente
+            {% elif solicitud.estado == 'aceptado' %}aceptado
+            {% elif solicitud.estado == 'rechazado' %}rechazado
             {% endif %}
         ">
-            Estado: {{ solicitud.estado }}
+            Estado: {{ solicitud.estado|capitalize }}
         </p>
 
-        {% if solicitud.estado == 'Aceptado' %}
+        {% if solicitud.estado == 'aceptado' %}
             <a href="{{ url_for('descargar_documento', id=solicitud.id) }}" class="btn">
                 Descargar Documento
             </a>
@@ -93,9 +94,11 @@
 
     {% else %}
         <p>No tienes ninguna solicitud registrada.</p>
+        <a href="{{ url_for('inicio') }}" class="btn">Ir a formulario</a>
     {% endif %}
 
     <br><br>
+    <a href="{{ url_for('inicio') }}" class="btn">Volver al inicio</a>
     <a href="{{ url_for('logout') }}" class="btn">Cerrar sesión</a>
 </div>
 
