@@ -170,3 +170,11 @@ CREATE TABLE IF NOT EXISTS comentarios (
         REFERENCES usuarios(id)
         ON DELETE CASCADE
 ) ENGINE=InnoDB;
+
+
+-- =====================================================
+-- INSERTAR USUARIO ADMINISTRADOR POR DEFECTO
+-- =====================================================
+INSERT INTO usuarios (correo, password, rol, estado, documentacion_completa) 
+VALUES ('admin@utacapulco.edu.mx', 'admin123', 'admin', 'aceptado', TRUE)
+ON DUPLICATE KEY UPDATE correo = correo;
