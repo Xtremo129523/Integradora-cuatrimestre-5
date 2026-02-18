@@ -303,6 +303,15 @@
             </ul>
         </div>
 
+        <div style="display: flex; gap: 10px; margin: 30px 0; flex-direction: column;">
+            <a href="{{ url_for('chat') }}" style="display: inline-block; padding: 14px 25px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; text-align: center; transition: all 0.3s;">
+                💬 Ir al Chat
+            </a>
+            <a href="{{ url_for('estado_solicitud') }}" style="display: inline-block; padding: 14px 25px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; text-align: center; transition: all 0.3s;">
+                📊 Ver Estado
+            </a>
+        </div>
+
         <a href="{{ url_for('logout') }}" class="btn-logout">
             <span>🚪</span>
             <span>Cerrar Sesión</span>

@@ -248,22 +248,46 @@ def ver_solicitud(id):
 def aprobar(id):
 
     db = conexion()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
 
     try:
+        # Obtener info de la solicitud
+        cursor.execute("SELECT usuario_id FROM solicitudes WHERE id=%s", (id,))
+        solicitud = cursor.fetchone()
+        
+        if not solicitud:
+            flash("Solicitud no encontrada", "danger")
+            return redirect(url_for("panel_admin"))
+        
+        usuario_id = solicitud["usuario_id"]
+        
+        # Actualizar estado de solicitud
         cursor.execute("UPDATE solicitudes SET estado='aceptado' WHERE id=%s", (id,))
+        
+        # Actualizar estado de usuario
         cursor.execute("""
             UPDATE usuarios 
             SET estado='aceptado' 
-            WHERE id = (SELECT usuario_id FROM solicitudes WHERE id=%s)
-        """, (id,))
+            WHERE id=%s
+        """, (usuario_id,))
 
         db.commit()
-        flash("✓ Solicitud aprobada exitosamente", "success")
+        
+        # Crear notificación de aprobación
+        crear_notificacion(
+            usuario_id=usuario_id,
+            tipo="estado_cambio",
+            titulo="Solicitud Aceptada",
+            mensaje="Tu solicitud de inscripción ha sido ACEPTADA. Ahora puedes acceder a todas las funciones.",
+            solicitud_id=id,
+            enlace="estado_solicitud"
+        )
+        
+        flash("Solicitud aprobada exitosamente", "success")
     
     except Exception as e:
         db.rollback()
-        flash(f"❌ Error al aprobar la solicitud: {str(e)}", "danger")
+        flash(f"Error al aprobar la solicitud: {str(e)}", "danger")
     
     finally:
         cursor.close()
@@ -279,22 +303,46 @@ def aprobar(id):
 def rechazar(id):
 
     db = conexion()
-    cursor = db.cursor()
+    cursor = db.cursor(dictionary=True)
 
     try:
+        # Obtener info de la solicitud
+        cursor.execute("SELECT usuario_id FROM solicitudes WHERE id=%s", (id,))
+        solicitud = cursor.fetchone()
+        
+        if not solicitud:
+            flash("Solicitud no encontrada", "danger")
+            return redirect(url_for("panel_admin"))
+        
+        usuario_id = solicitud["usuario_id"]
+        
+        # Actualizar estado de solicitud
         cursor.execute("UPDATE solicitudes SET estado='rechazado' WHERE id=%s", (id,))
+        
+        # Actualizar estado de usuario
         cursor.execute("""
             UPDATE usuarios 
             SET estado='rechazado' 
-            WHERE id = (SELECT usuario_id FROM solicitudes WHERE id=%s)
-        """, (id,))
+            WHERE id=%s
+        """, (usuario_id,))
 
         db.commit()
-        flash("✓ Solicitud rechazada exitosamente", "success")
+        
+        # Crear notificación de rechazo
+        crear_notificacion(
+            usuario_id=usuario_id,
+            tipo="estado_cambio",
+            titulo="Solicitud Rechazada",
+            mensaje="Tu solicitud de inscripción ha sido RECHAZADA. Puedes enviar una nueva solicitud más adelante.",
+            solicitud_id=id,
+            enlace="estado_solicitud"
+        )
+        
+        flash("Solicitud rechazada exitosamente", "success")
     
     except Exception as e:
         db.rollback()
-        flash(f"❌ Error al rechazar la solicitud: {str(e)}", "danger")
+        flash(f"Error al rechazar la solicitud: {str(e)}", "danger")
     
     finally:
         cursor.close()
@@ -542,6 +590,255 @@ def descargar_documento(id):
     )
 
 
+# ================= SISTEMA DE MENSAJES =================
+@app.route("/chat")
+@login_requerido
+def chat():
+    """Página de chat entre usuario y admin"""
+    # Si es admin, debe pasar un usuario_id como parámetro
+    if session.get("rol") == "admin":
+        usuario_id_target = request.args.get("usuario_id")
+        if not usuario_id_target:
+            flash("Debes especificar un usuario", "danger")
+            return redirect(url_for("panel_admin"))
+        usuario_id = int(usuario_id_target)
+    else:
+        usuario_id = session["usuario_id"]
+    
+    db = conexion()
+    cursor = db.cursor(dictionary=True)
+    
+    # Obtener mensajes ordenados por fecha
+    cursor.execute("""
+        SELECT m.*, 
+               CASE 
+                   WHEN m.remitente_tipo = 'usuario' THEN u.correo
+                   WHEN m.remitente_tipo = 'admin' THEN a.nombre
+               END as nombre_remitente
+        FROM mensajes m
+        LEFT JOIN usuarios u ON m.usuario_id = u.id AND m.remitente_tipo = 'usuario'
+        LEFT JOIN administradores a ON m.remitente_tipo = 'admin'
+        WHERE m.usuario_id = %s
+        ORDER BY m.fecha_creacion ASC
+    """, (usuario_id,))
+    
+    mensajes = cursor.fetchall()
+    
+    # Obtener info del usuario (para mostrar en el header del chat)
+    cursor.execute("SELECT correo, nombre FROM usuarios WHERE id = %s", (usuario_id,))
+    usuario_info = cursor.fetchone()
+    
+    # Contar mensajes no leídos
+    cursor.execute("""
+        SELECT COUNT(*) as no_leidos FROM mensajes 
+        WHERE usuario_id = %s AND leido = FALSE AND remitente_tipo = 'admin'
+    """, (usuario_id,))
+    
+    no_leidos = cursor.fetchone()["no_leidos"]
+    
+    cursor.close()
+    db.close()
+    
+    # Validar que el usuario no intente ver chats de otros usuarios
+    if session.get("rol") != "admin" and usuario_id != session["usuario_id"]:
+        flash("No tienes permiso para ver este chat", "danger")
+        return redirect(url_for("inicio"))
+    
+    return render_template("chat.html", mensajes=mensajes, no_leidos=no_leidos, 
+                         usuario_id=usuario_id, usuario_info=usuario_info)
+
+
+@app.route("/enviar_mensaje", methods=["POST"])
+@login_requerido
+def enviar_mensaje():
+    """Guardar mensaje del usuario o admin"""
+    contenido = request.form.get("contenido", "").strip()
+    usuario_id_target = request.form.get("usuario_id")
+    
+    if not contenido:
+        flash("El mensaje no puede estar vacío", "danger")
+        return redirect(request.referrer or url_for("chat"))
+    
+    # Si es admin, usar el usuario_id del formulario; si no, usar su propia ID
+    if session.get("rol") == "admin":
+        if not usuario_id_target:
+            flash("Debes especificar un usuario", "danger")
+            return redirect(url_for("panel_admin"))
+        usuario_id = int(usuario_id_target)
+    else:
+        usuario_id = session["usuario_id"]
+    
+    db = conexion()
+    cursor = db.cursor()
+    
+    try:
+        # Determinar si es admin o usuario
+        es_admin = session.get("rol") == "admin"
+        remitente_tipo = "admin" if es_admin else "usuario"
+        
+        cursor.execute("""
+            INSERT INTO mensajes (usuario_id, remitente_tipo, contenido, fecha_creacion)
+            VALUES (%s, %s, %s, %s)
+        """, (usuario_id, remitente_tipo, contenido, datetime.now()))
+        
+        db.commit()
+        
+        # Si es admin enviando mensaje, crear notificación
+        if es_admin:
+            cursor.execute("""
+                INSERT INTO notificaciones 
+                (usuario_id, tipo, titulo, mensaje, enlaces_a, fecha_creacion)
+                VALUES (%s, 'respuesta', 'Nuevo mensaje', %s, 'chat', %s)
+            """, (usuario_id, contenido, datetime.now()))
+            db.commit()
+        
+        flash("Mensaje enviado correctamente", "success")
+    
+    except Exception as e:
+        db.rollback()
+        flash(f"Error al enviar mensaje: {str(e)}", "danger")
+    
+    finally:
+        cursor.close()
+        db.close()
+    
+    # Redirigir al chat del usuario específico
+    if session.get("rol") == "admin":
+        return redirect(url_for("chat", usuario_id=usuario_id))
+    else:
+        return redirect(url_for("chat"))
+
+
+@app.route("/marcar_mensajes_leidos", methods=["POST"])
+@login_requerido
+def marcar_mensajes_leidos():
+    """Marcar mensajes como leídos"""
+    db = conexion()
+    cursor = db.cursor()
+    
+    try:
+        cursor.execute("""
+            UPDATE mensajes 
+            SET leido = TRUE
+            WHERE usuario_id = %s AND remitente_tipo = 'admin'
+        """, (session["usuario_id"],))
+        
+        db.commit()
+    
+    except Exception as e:
+        db.rollback()
+    
+    finally:
+        cursor.close()
+        db.close()
+    
+    return "", 204
+
+
+# ================= SISTEMA DE NOTIFICACIONES =================
+@app.route("/notificaciones")
+@login_requerido
+def notificaciones():
+    """Página de notificaciones"""
+    db = conexion()
+    cursor = db.cursor(dictionary=True)
+    
+    # Obtener notificaciones del usuario ordenadas por fecha descendente
+    cursor.execute("""
+        SELECT * FROM notificaciones
+        WHERE usuario_id = %s
+        ORDER BY fecha_creacion DESC
+        LIMIT 50
+    """, (session["usuario_id"],))
+    
+    notificaciones_list = cursor.fetchall()
+    
+    # Contar no leídas
+    cursor.execute("""
+        SELECT COUNT(*) as total FROM notificaciones
+        WHERE usuario_id = %s AND leido = FALSE
+    """, (session["usuario_id"],))
+    
+    total_no_leidas = cursor.fetchone()["total"]
+    
+    cursor.close()
+    db.close()
+    
+    return render_template("notificaciones.html", 
+                         notificaciones=notificaciones_list, 
+                         total_no_leidas=total_no_leidas)
+
+
+@app.route("/marcar_notificacion_leida/<int:id>", methods=["POST"])
+@login_requerido
+def marcar_notificacion_leida(id):
+    """Marcar una notificación como leída"""
+    db = conexion()
+    cursor = db.cursor()
+    
+    try:
+        cursor.execute("""
+            UPDATE notificaciones 
+            SET leido = TRUE
+            WHERE id = %s AND usuario_id = %s
+        """, (id, session["usuario_id"]))
+        
+        db.commit()
+        flash("Notificación marcada como leída", "info")
+    
+    except Exception as e:
+        db.rollback()
+        flash(f"Error: {str(e)}", "danger")
+    
+    finally:
+        cursor.close()
+        db.close()
+    
+    return redirect(url_for("notificaciones"))
+
+
+@app.route("/obtener_notificaciones_no_leidas")
+@login_requerido
+def obtener_notificaciones_no_leidas():
+    """API para obtener cantidad de notificaciones no leídas (para el navbar)"""
+    db = conexion()
+    cursor = db.cursor(dictionary=True)
+    
+    cursor.execute("""
+        SELECT COUNT(*) as total FROM notificaciones
+        WHERE usuario_id = %s AND leido = FALSE
+    """, (session["usuario_id"],))
+    
+    resultado = cursor.fetchone()
+    cursor.close()
+    db.close()
+    
+    return {"total_no_leidas": resultado["total"]}
+
+
+def crear_notificacion(usuario_id, tipo, titulo, mensaje, solicitud_id=None, enlace=None):
+    """Función auxiliar para crear notificaciones"""
+    db = conexion()
+    cursor = db.cursor()
+    
+    try:
+        cursor.execute("""
+            INSERT INTO notificaciones 
+            (usuario_id, solicitud_id, tipo, titulo, mensaje, enlaces_a, fecha_creacion)
+            VALUES (%s, %s, %s, %s, %s, %s, %s)
+        """, (usuario_id, solicitud_id, tipo, titulo, mensaje, enlace, datetime.now()))
+        
+        db.commit()
+    
+    except Exception as e:
+        db.rollback()
+        print(f"Error al crear notificación: {str(e)}")
+    
+    finally:
+        cursor.close()
+        db.close()
+
+
 # ================= LOGOUT =================
 @app.route("/logout")
 @login_requerido
@@ -554,7 +851,7 @@ def logout():
     session.pop("rol", None)
     session.pop("estado", None)
     
-    flash(f"🔔 Sesión cerrada - Hasta pronto, {usuario_correo}", "info")
+    flash(f"Sesión cerrada - Hasta pronto, {usuario_correo}", "info")
     return redirect(url_for("login"))
 
 

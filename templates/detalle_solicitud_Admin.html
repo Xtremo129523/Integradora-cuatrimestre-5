@@ -625,6 +625,10 @@
 
         <!-- Botones de Acción -->
         <div class="action-buttons">
+            <a href="{{ url_for('chat', usuario_id=solicitud.usuario_id) }}" class="btn btn-accept">
+                <span>💬</span>
+                <span>Chatear con Usuario</span>
+            </a>
             <a href="javascript:void(0)" onclick="showModal('accept', '{{ url_for('aprobar', id=solicitud.id) }}')" class="btn btn-accept">
                 <span>✓</span>
                 <span>Aceptar Solicitud</span>
