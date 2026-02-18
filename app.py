@@ -120,10 +120,10 @@ def login():
         db.close()
 
         if usuario["rol"] == "admin":
-            flash(f"Bienvenido, {correo}", "success")
+            flash(f"🔔 Sesión iniciada - Bienvenido, {correo}", "success")
             return redirect(url_for("panel_admin"))
 
-        flash(f"Bienvenido, {correo}", "success")
+        flash(f"🔔 Sesión iniciada - Bienvenido, {correo}", "success")
         return redirect(url_for("inicio"))
 
     return render_template("login.html")
@@ -498,7 +498,15 @@ def descargar_documento(id):
 @app.route("/logout")
 @login_requerido
 def logout():
-    session.clear()
+    usuario_correo = session.get("correo", "Usuario")
+    
+    # Eliminar solo las claves del usuario, no los mensajes flash
+    session.pop("usuario_id", None)
+    session.pop("correo", None)
+    session.pop("rol", None)
+    session.pop("estado", None)
+    
+    flash(f"🔔 Sesión cerrada - Hasta pronto, {usuario_correo}", "info")
     return redirect(url_for("login"))
 
 
