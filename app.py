@@ -93,7 +93,39 @@ def login():
         db = conexion()
         cursor = db.cursor(dictionary=True)
 
-        # Primero verificar si el usuario existe
+        # Primero verificar si es un administrador
+        cursor.execute("SELECT * FROM administradores WHERE correo=%s", (correo,))
+        admin = cursor.fetchone()
+
+        if admin:
+            # Es un administrador
+            if admin["password"] != password:
+                flash("Contraseña incorrecta", "danger")
+                cursor.close()
+                db.close()
+                return redirect(url_for("login"))
+            
+            if admin["estado"] != "activo":
+                flash("Tu cuenta de administrador está inactiva. Contacta al responsable.", "danger")
+                cursor.close()
+                db.close()
+                return redirect(url_for("login"))
+
+            # Login de administrador exitoso
+            session["usuario_id"] = admin["id"]
+            session["correo"] = admin["correo"]
+            session["nombre"] = admin["nombre"]
+            session["rol"] = "admin"
+            session["estado"] = "aceptado"
+            session["es_admin"] = True
+
+            cursor.close()
+            db.close()
+
+            flash(f"🔔 Sesión iniciada - Bienvenido, {admin['nombre']}", "success")
+            return redirect(url_for("panel_admin"))
+
+        # Si no es admin, verificar si es usuario regular
         cursor.execute("SELECT * FROM usuarios WHERE correo=%s", (correo,))
         usuario = cursor.fetchone()
 
@@ -110,18 +142,15 @@ def login():
             db.close()
             return redirect(url_for("login"))
 
-        # Credenciales correctas
+        # Credenciales correctas - Usuario regular
         session["usuario_id"] = usuario["id"]
         session["correo"] = usuario["correo"]
         session["rol"] = usuario["rol"]
         session["estado"] = usuario["estado"]
+        session["es_admin"] = False
 
         cursor.close()
         db.close()
-
-        if usuario["rol"] == "admin":
-            flash(f"🔔 Sesión iniciada - Bienvenido, {correo}", "success")
-            return redirect(url_for("panel_admin"))
 
         flash(f"🔔 Sesión iniciada - Bienvenido, {correo}", "success")
         return redirect(url_for("inicio"))
@@ -182,9 +211,10 @@ def panel_admin():
     cursor = db.cursor(dictionary=True)
 
     cursor.execute("""
-        SELECT s.*, u.correo, u.password, u.es_admin 
+        SELECT s.*, u.correo, u.password 
         FROM solicitudes s
         JOIN usuarios u ON s.usuario_id = u.id
+        WHERE u.rol = 'alumno'
     """)
     solicitudes = cursor.fetchall()
 

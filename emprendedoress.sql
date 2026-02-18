@@ -25,6 +25,21 @@ CREATE INDEX idx_correo ON usuarios(correo);
 
 
 -- =====================================================
+-- TABLA ADMINISTRADORES
+-- =====================================================
+CREATE TABLE IF NOT EXISTS administradores (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    correo VARCHAR(150) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    cargo VARCHAR(100),
+    estado ENUM('activo','inactivo') DEFAULT 'activo',
+    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_admin_correo (correo)
+) ENGINE=InnoDB;
+
+
+-- =====================================================
 -- TABLA SOLICITUDES
 -- =====================================================
 CREATE TABLE IF NOT EXISTS solicitudes (
@@ -173,8 +188,8 @@ CREATE TABLE IF NOT EXISTS comentarios (
 
 
 -- =====================================================
--- INSERTAR USUARIO ADMINISTRADOR POR DEFECTO
+-- INSERTAR ADMINISTRADOR POR DEFECTO
 -- =====================================================
-INSERT INTO usuarios (correo, password, rol, estado, documentacion_completa) 
-VALUES ('admin@utacapulco.edu.mx', 'admin123', 'admin', 'aceptado', TRUE)
+INSERT INTO administradores (nombre, correo, password, cargo, estado) 
+VALUES ('Administrador Principal', 'admin@utacapulco.edu.mx', 'admin123', 'Coordinador General', 'activo')
 ON DUPLICATE KEY UPDATE correo = correo;

@@ -254,7 +254,184 @@
                 justify-content: center;
             }
         }
+
+        /* Modal personalizado */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            max-width: 500px;
+            width: 90%;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -40%);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .modal-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            font-size: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        @keyframes scaleIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .modal-icon.accept {
+            background: linear-gradient(135deg, #4cd964, #2ecc71);
+            box-shadow: 0 10px 30px rgba(76, 217, 100, 0.4);
+        }
+
+        .modal-icon.reject {
+            background: linear-gradient(135deg, #ff3b30, #dc143c);
+            box-shadow: 0 10px 30px rgba(255, 59, 48, 0.4);
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #333;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .modal-message {
+            font-size: 16px;
+            color: #666;
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.5;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 15px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .modal-btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .modal-btn-cancel {
+            background: #f5f5f5;
+            color: #666;
+            border: 2px solid #ddd;
+        }
+
+        .modal-btn-cancel:hover {
+            background: #e0e0e0;
+            transform: translateY(-2px);
+        }
     </style>
+    <script>
+        let currentAction = null;
+
+        function showModal(type, url) {
+            const modal = document.getElementById('confirmModal');
+            const icon = document.getElementById('modalIcon');
+            const title = document.getElementById('modalTitle');
+            const message = document.getElementById('modalMessage');
+            
+            if (type === 'accept') {
+                icon.className = 'modal-icon accept';
+                icon.textContent = '✓';
+                title.textContent = '¿Aceptar esta solicitud?';
+                message.textContent = 'El usuario será notificado y podrá acceder a todas las funcionalidades del sistema.';
+            } else {
+                icon.className = 'modal-icon reject';
+                icon.textContent = '✗';
+                title.textContent = '¿Rechazar esta solicitud?';
+                message.textContent = 'El usuario será notificado del rechazo de su solicitud. Esta acción se puede revertir más adelante.';
+            }
+            
+            currentAction = url;
+            modal.style.display = 'block';
+            return false;
+        }
+
+        function confirmAction() {
+            if (currentAction) {
+                window.location.href = currentAction;
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('confirmModal').style.display = 'none';
+            currentAction = null;
+        }
+
+        // Cerrar modal al hacer clic fuera
+        window.onclick = function(event) {
+            const modal = document.getElementById('confirmModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+    </script>
 </head>
 <body>
     <div class="container">
@@ -448,11 +625,11 @@
 
         <!-- Botones de Acción -->
         <div class="action-buttons">
-            <a href="{{ url_for('aprobar', id=solicitud.id) }}" class="btn btn-accept" onclick="return confirm('¿Estás seguro de ACEPTAR esta solicitud?')">
+            <a href="javascript:void(0)" onclick="showModal('accept', '{{ url_for('aprobar', id=solicitud.id) }}')" class="btn btn-accept">
                 <span>✓</span>
                 <span>Aceptar Solicitud</span>
             </a>
-            <a href="{{ url_for('rechazar', id=solicitud.id) }}" class="btn btn-reject" onclick="return confirm('¿Estás seguro de RECHAZAR esta solicitud?')">
+            <a href="javascript:void(0)" onclick="showModal('reject', '{{ url_for('rechazar', id=solicitud.id) }}')" class="btn btn-reject">
                 <span>✗</span>
                 <span>Rechazar Solicitud</span>
             </a>
@@ -467,6 +644,25 @@
             <p style="text-align: center; color: #666;">❌ Solicitud no encontrada.</p>
         </div>
         {% endif %}
+    </div>
+
+    <!-- Modal de Confirmación -->
+    <div id="confirmModal" class="modal-overlay">
+        <div class="modal-content">
+            <div id="modalIcon" class="modal-icon"></div>
+            <h2 id="modalTitle" class="modal-title"></h2>
+            <p id="modalMessage" class="modal-message"></p>
+            <div class="modal-buttons">
+                <button onclick="closeModal()" class="modal-btn modal-btn-cancel">
+                    <span>✗</span>
+                    <span>Cancelar</span>
+                </button>
+                <button onclick="confirmAction()" class="modal-btn modal-btn-confirm">
+                    <span>✓</span>
+                    <span>Confirmar</span>
+                </button>
+            </div>
+        </div>
     </div>
 </body>
 </html>

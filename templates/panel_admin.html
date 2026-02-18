@@ -664,13 +664,8 @@
                 </thead>
                 <tbody>
                     {% for s in solicitudes %}
-                    <tr class="{% if s.es_admin %}admin-row{% endif %}">
-                        <td>
-                            {{ s.correo }}
-                            {% if s.es_admin %}
-                            <span class="estado-badge badge-admin" style="margin-left: 8px; font-size: 10px;">👑 ADMIN</span>
-                            {% endif %}
-                        </td>
+                    <tr>
+                        <td>{{ s.correo }}</td>
                         <td>
                             <div class="password-field">
                                 <span class="password-text password-hidden" data-password="{{ s.password if s.password else 'N/A' }}">••••••••</span>
