@@ -182,7 +182,7 @@ def panel_admin():
     cursor = db.cursor(dictionary=True)
 
     cursor.execute("""
-        SELECT s.*, u.correo 
+        SELECT s.*, u.correo, u.password 
         FROM solicitudes s
         JOIN usuarios u ON s.usuario_id = u.id
     """)
