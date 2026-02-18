@@ -284,6 +284,30 @@ def inicio():
     # Actualizar el estado del usuario desde la BD
     cursor.execute("SELECT estado FROM usuarios WHERE id=%s", (session["usuario_id"],))
     usuario = cursor.fetchone()
+    
+    # Actualizar estado en la sesión
+    session["estado"] = usuario["estado"]
+
+    # Redirigir según el estado
+    if usuario["estado"] == "aceptado":
+        cursor.close()
+        db.close()
+        return render_template("aceptado.html")
+
+    if usuario["estado"] == "rechazado":
+        cursor.close()
+        db.close()
+        return render_template("rechazado.html")
+
+    # Estado pendiente - verificar si ya envió el formulario
+    cursor.execute("""
+        SELECT id FROM solicitudes 
+        WHERE usuario_id=%s 
+        ORDER BY fecha_creacion DESC 
+        LIMIT 1
+    """, (session["usuario_id"],))
+    solicitud_existente = cursor.fetchone()
+    
     cursor.close()
     db.close()
 
@@ -291,17 +315,11 @@ def inicio():
         flash("Error al obtener información del usuario", "danger")
         return redirect(url_for("logout"))
 
-    # Actualizar estado en la sesión
-    session["estado"] = usuario["estado"]
-
-    # Redirigir según el estado
-    if usuario["estado"] == "aceptado":
-        return render_template("aceptado.html")
-
-    if usuario["estado"] == "rechazado":
-        return render_template("rechazado.html")
-
-    # Estado pendiente - mostrar formulario
+    # Si ya tiene una solicitud, mostrar página de espera
+    if solicitud_existente:
+        return render_template("en_revision.html")
+    
+    # Si no ha enviado formulario, mostrarlo
     return render_template("formulario.html")
 
 
@@ -393,7 +411,7 @@ def guardar_formulario():
         ))
 
         db.commit()
-        flash("✓ Solicitud enviada correctamente. El administrador la revisará pronto.", "success")
+        flash("✓ ¡Formulario enviado exitosamente! Tu solicitud está en espera de revisión por parte del administrador.", "success")
     
     except Exception as e:
         db.rollback()
