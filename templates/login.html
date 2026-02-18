@@ -2,13 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Sistema de Emprendedores</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
@@ -16,137 +19,378 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #0D3B66, #3E92CC);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            position: relative;
+            overflow: hidden;
         }
 
-        .login-card {
-            background-color: #ffffff;
-            padding: 40px 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        /* Animación de fondo */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent 30%, 
+                rgba(255,255,255,0.1) 50%, 
+                transparent 70%);
+            animation: moveBackground 15s ease-in-out infinite;
+        }
+
+        @keyframes moveBackground {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            50% { transform: translate(-30%, -30%) rotate(180deg); }
+        }
+
+        /* Círculos decorativos animados */
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .circle1 {
+            width: 300px;
+            height: 300px;
+            top: -150px;
+            left: -150px;
+            animation-delay: 0s;
+        }
+
+        .circle2 {
+            width: 200px;
+            height: 200px;
+            bottom: -100px;
+            right: -100px;
+            animation-delay: 2s;
+        }
+
+        .circle3 {
+            width: 150px;
+            height: 150px;
+            top: 50%;
+            right: -75px;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.1); }
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            padding: 50px 40px;
+            border-radius: 25px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #0D3B66;
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
-        label {
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 300;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 30px;
+        }
+
+        .input-group label {
             display: block;
-            margin-top: 10px;
-            font-weight: bold;
-            color: #333333;
+            color: #ffffff;
+            font-weight: 500;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #667eea;
+            pointer-events: none;
         }
 
         input[type="email"],
         input[type="password"] {
             width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            margin-bottom: 20px;
-            border: 1px solid #ccc;
-            border-radius: 8px;
+            padding: 15px 15px 15px 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid transparent;
+            border-radius: 15px;
             outline: none;
-            transition: border-color 0.3s;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        input[type="email"]::placeholder,
+        input[type="password"]::placeholder {
+            color: #999;
         }
 
         input[type="email"]:focus,
         input[type="password"]:focus {
-            border-color: #0D3B66;
+            background: #ffffff;
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+            transform: translateY(-2px);
         }
 
-        button {
+        .btn-login {
             width: 100%;
-            padding: 14px;
-            background-color: #0D3B66;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             font-size: 16px;
-            font-weight: bold;
+            font-weight: 600;
             border: none;
-            border-radius: 8px;
+            border-radius: 15px;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            position: relative;
+            overflow: hidden;
         }
 
-        button:hover {
-            background-color: #095288;
+        .btn-login::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
         }
 
-        a {
-            display: block;
+        .btn-login:hover::before {
+            left: 100%;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.5);
+        }
+
+        .btn-login:active {
+            transform: translateY(-1px);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
             text-align: center;
-            margin-top: 15px;
-            color: #0D3B66;
-            font-weight: bold;
+            margin: 30px 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .divider span {
+            padding: 0 15px;
+        }
+
+        .register-link {
+            text-align: center;
+        }
+
+        .register-link a {
+            color: #ffffff;
             text-decoration: none;
+            font-weight: 600;
+            padding: 12px 30px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            display: inline-block;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        a:hover {
-            text-decoration: underline;
+        .register-link a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
         }
 
+        /* Mensajes flash mejorados */
         .message {
-            text-align: center;
-            margin-bottom: 20px;
-            padding: 12px;
-            border-radius: 8px;
-            font-weight: bold;
-            animation: fadeIn 0.3s ease-in;
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            font-weight: 500;
+            animation: slideDown 0.4s ease-out;
+            backdrop-filter: blur(10px);
+            border: 1px solid;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .success {
-            background-color: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
+            background: rgba(76, 217, 100, 0.2);
+            color: #ffffff;
+            border-color: rgba(76, 217, 100, 0.5);
         }
 
         .danger {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
+            background: rgba(255, 59, 48, 0.2);
+            color: #ffffff;
+            border-color: rgba(255, 59, 48, 0.5);
+        }
+
+        .info {
+            background: rgba(90, 200, 250, 0.2);
+            color: #ffffff;
+            border-color: rgba(90, 200, 250, 0.5);
+        }
+
+        .warning {
+            background: rgba(255, 204, 0, 0.2);
+            color: #ffffff;
+            border-color: rgba(255, 204, 0, 0.5);
         }
 
         @media (max-width: 500px) {
-            .login-card {
-                padding: 20px;
+            .login-container {
+                padding: 30px 25px;
+                margin: 20px;
+            }
+
+            h2 {
+                font-size: 26px;
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Círculos decorativos -->
+    <div class="circle circle1"></div>
+    <div class="circle circle2"></div>
+    <div class="circle circle3"></div>
 
-<div class="login-card">
-    <h2>Iniciar sesión</h2>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="logo">🚀</div>
+            <h2>Bienvenido</h2>
+            <p class="subtitle">Sistema de Gestión de Emprendedores</p>
+        </div>
 
-    <!-- MENSAJES FLASH -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% set category, message = messages[-1] %}
-        <p class="message {{ category }}">{{ message }}</p>
-      {% endif %}
-    {% endwith %}
+        <!-- MENSAJES FLASH -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% set category, message = messages[-1] %}
+            <div class="message {{ category }}">{{ message }}</div>
+          {% endif %}
+        {% endwith %}
 
-    <form method="POST">
-        <label>Correo institucional</label>
-        <input type="email" name="correo" placeholder="202304105@utacapulco.edu.mx" required>
+        <form method="POST">
+            <div class="input-group">
+                <label>Correo Institucional</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">📧</span>
+                    <input type="email" name="correo" placeholder="ejemplo@utacapulco.edu.mx" required>
+                </div>
+            </div>
 
-        <label>Contraseña</label>
-        <input type="password" name="password" placeholder="********" required>
+            <div class="input-group">
+                <label>Contraseña</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔒</span>
+                    <input type="password" name="password" placeholder="Ingresa tu contraseña" required>
+                </div>
+            </div>
 
-        <button type="submit">Entrar</button>
-    </form>
+            <button type="submit" class="btn-login">Iniciar Sesión</button>
+        </form>
 
-    <a href="/registro">Crear cuenta</a>
+        <div class="divider">
+            <span>¿No tienes cuenta?</span>
+        </div>
 
-</div>
+        <div class="register-link">
+            <a href="/registro">Crear Nueva Cuenta</a>
+        </div>
+    </div>
 
 </body>
 </html>

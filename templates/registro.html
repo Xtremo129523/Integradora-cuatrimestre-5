@@ -2,13 +2,16 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Registro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Sistema de Emprendedores</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Poppins', sans-serif;
         }
 
         body {
@@ -16,109 +19,396 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #0D3B66, #3E92CC);
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+            position: relative;
+            overflow: hidden;
         }
 
-        .card {
-            background: white;
-            padding: 40px 30px;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        /* Animación de fondo */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, 
+                transparent 30%, 
+                rgba(255,255,255,0.1) 50%, 
+                transparent 70%);
+            animation: moveBackground 15s ease-in-out infinite;
+        }
+
+        @keyframes moveBackground {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            50% { transform: translate(-30%, -30%) rotate(180deg); }
+        }
+
+        /* Círculos decorativos */
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .circle1 {
+            width: 250px;
+            height: 250px;
+            top: -125px;
+            right: -125px;
+            animation-delay: 0s;
+        }
+
+        .circle2 {
+            width: 180px;
+            height: 180px;
+            bottom: -90px;
+            left: -90px;
+            animation-delay: 3s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-30px) scale(1.1); }
+        }
+
+        .register-container {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            padding: 50px 40px;
+            border-radius: 25px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             width: 100%;
-            max-width: 400px;
+            max-width: 450px;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .register-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #764ba2, #667eea);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 40px;
+            box-shadow: 0 10px 25px rgba(118, 75, 162, 0.4);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
         }
 
         h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #0D3B66;
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
         }
 
-        label {
-            font-weight: bold;
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 300;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
             display: block;
-            margin-top: 15px;
+            color: #ffffff;
+            font-weight: 500;
+            margin-bottom: 10px;
+            font-size: 14px;
         }
 
-        input {
-            width: 100%;
-            padding: 12px;
-            margin-top: 6px;
-            border-radius: 8px;
-            border: 1px solid #ccc;
+        .input-wrapper {
+            position: relative;
         }
 
-        button {
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 20px;
+            color: #764ba2;
+            pointer-events: none;
+        }
+
+        input[type="email"],
+        input[type="password"] {
             width: 100%;
-            margin-top: 20px;
-            padding: 14px;
-            background-color: #0D3B66;
+            padding: 15px 15px 15px 50px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid transparent;
+            border-radius: 15px;
+            outline: none;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        input[type="email"]::placeholder,
+        input[type="password"]::placeholder {
+            color: #999;
+        }
+
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            background: #ffffff;
+            border-color: #764ba2;
+            box-shadow: 0 5px 20px rgba(118, 75, 162, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .password-hint {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-register {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
             color: white;
+            font-size: 16px;
+            font-weight: 600;
             border: none;
-            border-radius: 8px;
-            font-weight: bold;
+            border-radius: 15px;
             cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(118, 75, 162, 0.4);
+            position: relative;
+            overflow: hidden;
+            margin-top: 10px;
         }
 
-        button:hover {
-            background-color: #095288;
+        .btn-register::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
         }
 
-        a {
-            display: block;
+        .btn-register:hover::before {
+            left: 100%;
+        }
+
+        .btn-register:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(118, 75, 162, 0.5);
+        }
+
+        .btn-register:active {
+            transform: translateY(-1px);
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
             text-align: center;
-            margin-top: 15px;
+            margin: 30px 0;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .divider span {
+            padding: 0 15px;
+        }
+
+        .login-link {
+            text-align: center;
+        }
+
+        .login-link a {
+            color: #ffffff;
             text-decoration: none;
-            color: #0D3B66;
-            font-weight: bold;
+            font-weight: 600;
+            padding: 12px 30px;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+            display: inline-block;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
         }
 
+        .login-link a:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Mensaje de error mejorado */
         .error {
-            background-color: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-            margin-bottom: 20px;
-            font-weight: bold;
-            animation: shake 0.3s ease-in-out;
+            background: rgba(255, 59, 48, 0.2);
+            color: #ffffff;
+            border: 1px solid rgba(255, 59, 48, 0.5);
+            padding: 15px 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            font-weight: 500;
+            animation: shake 0.5s ease-in-out;
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
-            25% { transform: translateX(-5px); }
-            75% { transform: translateX(5px); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .requirements {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            border-left: 4px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .requirements h4 {
+            color: #ffffff;
+            font-size: 14px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .requirements ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .requirements li {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         @media (max-width: 500px) {
-            .card {
-                padding: 20px;
+            .register-container {
+                padding: 30px 25px;
+                margin: 20px;
+            }
+
+            h2 {
+                font-size: 26px;
+            }
+
+            .logo {
+                width: 60px;
+                height: 60px;
+                font-size: 30px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Círculos decorativos -->
+    <div class="circle circle1"></div>
+    <div class="circle circle2"></div>
 
-<div class="card">
-    <h2>Crear Cuenta</h2>
+    <div class="register-container">
+        <div class="register-header">
+            <div class="logo">✨</div>
+            <h2>Crear Cuenta</h2>
+            <p class="subtitle">Únete al sistema de emprendedores</p>
+        </div>
 
-    <form method="POST">
-        <label>Correo institucional</label>
-        <input type="email" name="correo" placeholder="202304105@utacapulco.edu.mx" required>
+        {% if error %}
+            <div class="error">
+                <span>⚠️</span>
+                <span>{{ error }}</span>
+            </div>
+        {% endif %}
 
-        <label>Contraseña</label>
-        <input type="password" name="password" required>
+        <form method="POST">
+            <div class="input-group">
+                <label>Correo Institucional</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">📧</span>
+                    <input type="email" name="correo" placeholder="ejemplo@utacapulco.edu.mx" required>
+                </div>
+            </div>
 
-        <button type="submit">Registrarse</button>
-    </form>
+            <div class="input-group">
+                <label>Contraseña</label>
+                <div class="input-wrapper">
+                    <span class="input-icon">🔒</span>
+                    <input type="password" name="password" placeholder="Crea una contraseña segura" required>
+                </div>
+                <div class="password-hint">
+                    <span>💡</span>
+                    <span>Mínimo 6 caracteres</span>
+                </div>
+            </div>
 
-    <a href="/">Volver al login</a>
+            <div class="requirements">
+                <h4>📋 Requisitos:</h4>
+                <ul>
+                    <li>✓ Usar correo institucional (@utacapulco.edu.mx)</li>
+                    <li>✓ Contraseña de al menos 6 caracteres</li>
+                    <li>✓ Completar el formulario tras el registro</li>
+                </ul>
+            </div>
 
-    {% if error %}
-        <p class="error">{{ error }}</p>
-    {% endif %}
-</div>
+            <button type="submit" class="btn-register">Crear Cuenta</button>
+        </form>
+
+        <div class="divider">
+            <span>¿Ya tienes cuenta?</span>
+        </div>
+
+        <div class="login-link">
+            <a href="/">Iniciar Sesión</a>
+        </div>
+    </div>
 
 </body>
 </html>
