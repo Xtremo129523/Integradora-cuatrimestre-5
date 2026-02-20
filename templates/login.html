@@ -19,7 +19,7 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f5a8a 0%, #0f3460 100%);
             position: relative;
             overflow: hidden;
         }
@@ -112,14 +112,14 @@
         .logo {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: linear-gradient(135deg, #0f5a8a, #0f3460);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 20px;
             font-size: 40px;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 25px rgba(15, 90, 138, 0.4);
             animation: pulse 2s ease-in-out infinite;
         }
 
@@ -165,7 +165,7 @@
             top: 50%;
             transform: translateY(-50%);
             font-size: 20px;
-            color: #667eea;
+            color: #0f5a8a;
             pointer-events: none;
         }
 
@@ -190,15 +190,15 @@
         input[type="email"]:focus,
         input[type="password"]:focus {
             background: #ffffff;
-            border-color: #667eea;
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+            border-color: #0f5a8a;
+            box-shadow: 0 5px 20px rgba(15, 90, 138, 0.3);
             transform: translateY(-2px);
         }
 
         .btn-login {
             width: 100%;
             padding: 16px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #0f5a8a 0%, #0f3460 100%);
             color: white;
             font-size: 16px;
             font-weight: 600;
@@ -206,7 +206,7 @@
             border-radius: 15px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 10px 25px rgba(15, 90, 138, 0.4);
             position: relative;
             overflow: hidden;
         }
@@ -358,8 +358,8 @@
         }
 
         .input-wrapper input:focus {
-            border-color: #667eea;
-            background: rgba(102, 126, 234, 0.1);
+            border-color: #0f5a8a;
+            background: rgba(15, 90, 138, 0.1);
         }
 
         .input-wrapper input[style*="border-color: #ef4444"] {
@@ -376,6 +376,11 @@
         .input-wrapper input[style*="border-color: #10b981"] {
             background: rgba(16, 185, 129, 0.05) !important;
             border-color: #10b981 !important;
+        }
+
+        .input-wrapper input:focus {
+            border-color: #0f5a8a;
+            background: rgba(15, 90, 138, 0.1);
         }
 
         @keyframes shake {
