@@ -625,7 +625,13 @@ def chat():
     mensajes = cursor.fetchall()
     
     # Obtener info del usuario (para mostrar en el header del chat)
-    cursor.execute("SELECT correo, nombre FROM usuarios WHERE id = %s", (usuario_id,))
+    # El nombre está en solicitudes, no en usuarios
+    cursor.execute("""
+        SELECT u.correo, s.nombre 
+        FROM usuarios u 
+        LEFT JOIN solicitudes s ON u.id = s.usuario_id 
+        WHERE u.id = %s
+    """, (usuario_id,))
     usuario_info = cursor.fetchone()
     
     # Contar mensajes no leídos
