@@ -340,6 +340,49 @@
                 font-size: 30px;
             }
         }
+
+        /* ============ ESTILOS DE VALIDACIÓN ============ */
+        
+        .error-message {
+            display: block;
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 8px;
+            font-weight: 500;
+            animation: slideDown 0.3s ease-out;
+        }
+
+        .input-wrapper input {
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .input-wrapper input:focus {
+            border-color: #667eea;
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .input-wrapper input[style*="border-color: #ef4444"] {
+            background: rgba(239, 68, 68, 0.05) !important;
+            border-color: #ef4444 !important;
+            animation: shake 0.4s ease-in-out;
+        }
+
+        .input-wrapper input[style*="border-color: #f59e0b"] {
+            background: rgba(245, 158, 11, 0.05) !important;
+            border-color: #f59e0b !important;
+        }
+
+        .input-wrapper input[style*="border-color: #10b981"] {
+            background: rgba(16, 185, 129, 0.05) !important;
+            border-color: #10b981 !important;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
     </style>
 </head>
 <body>
@@ -363,24 +406,38 @@
           {% endif %}
         {% endwith %}
 
-        <form method="POST">
+        <form method="POST" id="loginForm" onsubmit="validarFormulario(event)">
             <div class="input-group">
-                <label>Correo Institucional</label>
+                <label for="correo">Correo Institucional</label>
                 <div class="input-wrapper">
                     <span class="input-icon">📧</span>
-                    <input type="email" name="correo" placeholder="ejemplo@utacapulco.edu.mx" required>
+                    <input 
+                        type="email" 
+                        id="correo" 
+                        name="correo" 
+                        placeholder="ejemplo@utacapulco.edu.mx"
+                        onblur="validarCorreo()"
+                        oninput="validarCorreo()">
                 </div>
+                <span class="error-message" id="correoError"></span>
             </div>
 
             <div class="input-group">
-                <label>Contraseña</label>
+                <label for="password">Contraseña</label>
                 <div class="input-wrapper">
                     <span class="input-icon">🔒</span>
-                    <input type="password" name="password" placeholder="Ingresa tu contraseña" required>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        placeholder="Ingresa tu contraseña"
+                        onblur="validarPassword()"
+                        oninput="validarPassword()">
                 </div>
+                <span class="error-message" id="passwordError"></span>
             </div>
 
-            <button type="submit" class="btn-login">Iniciar Sesión</button>
+            <button type="submit" class="btn-login" id="submitBtn">Iniciar Sesión</button>
         </form>
 
         <div class="divider">
@@ -391,6 +448,89 @@
             <a href="/registro">Crear Nueva Cuenta</a>
         </div>
     </div>
+
+    <script>
+        // ============ VALIDACIÓN EN TIEMPO REAL ============
+        
+        function validarCorreo() {
+            const correoInput = document.getElementById('correo');
+            const correoError = document.getElementById('correoError');
+            const correo = correoInput.value.trim();
+            
+            // Expresión regular para validar email
+            const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (!correo) {
+                correoError.textContent = '⚠️ El correo es obligatorio';
+                correoInput.style.borderColor = '#ef4444';
+                correoInput.parentElement.style.background = 'rgba(239, 68, 68, 0.05)';
+                return false;
+            } else if (!regexEmail.test(correo)) {
+                correoError.textContent = '❌ Formato de correo inválido (ejemplo: usuario@utacapulco.edu.mx)';
+                correoInput.style.borderColor = '#ef4444';
+                correoInput.parentElement.style.background = 'rgba(239, 68, 68, 0.05)';
+                return false;
+            } else if (!correo.includes('@utacapulco.edu.mx')) {
+                correoError.textContent = '❌ Usa tu correo institucional (@utacapulco.edu.mx)';
+                correoInput.style.borderColor = '#f59e0b';
+                correoInput.parentElement.style.background = 'rgba(245, 158, 11, 0.05)';
+                return false;
+            } else {
+                correoError.textContent = '';
+                correoInput.style.borderColor = '#10b981';
+                correoInput.parentElement.style.background = 'rgba(16, 185, 129, 0.05)';
+                return true;
+            }
+        }
+        
+        function validarPassword() {
+            const passwordInput = document.getElementById('password');
+            const passwordError = document.getElementById('passwordError');
+            const password = passwordInput.value;
+            
+            if (!password) {
+                passwordError.textContent = '⚠️ La contraseña es obligatoria';
+                passwordInput.style.borderColor = '#ef4444';
+                passwordInput.parentElement.style.background = 'rgba(239, 68, 68, 0.05)';
+                return false;
+            } else if (password.length < 4) {
+                passwordError.textContent = '❌ La contraseña debe tener al menos 4 caracteres';
+                passwordInput.style.borderColor = '#ef4444';
+                passwordInput.parentElement.style.background = 'rgba(239, 68, 68, 0.05)';
+                return false;
+            } else {
+                passwordError.textContent = '';
+                passwordInput.style.borderColor = '#10b981';
+                passwordInput.parentElement.style.background = 'rgba(16, 185, 129, 0.05)';
+                return true;
+            }
+        }
+        
+        function validarFormulario(event) {
+            event.preventDefault();
+            
+            const correoValido = validarCorreo();
+            const passwordValido = validarPassword();
+            
+            if (correoValido && passwordValido) {
+                // Si todo es válido, enviar el formulario
+                document.getElementById('loginForm').submit();
+            } else {
+                // Mostrar alerta si hay errores
+                alert('Por favor, completa correctamente todos los campos');
+            }
+        }
+        
+        // Validar cuando carga la página (si hay valores previos)
+        window.addEventListener('load', function() {
+            if (document.getElementById('correo').value) {
+                validarCorreo();
+            }
+            if (document.getElementById('password').value) {
+                validarPassword();
+            }
+        });
+    </script>
 
 </body>
 </html>
