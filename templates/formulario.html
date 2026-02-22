@@ -19,6 +19,75 @@
             min-height: 100vh;
         }
 
+        /* BARRA DE PROGRESO */
+        .progress-container {
+            margin-bottom: 30px;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .progress-step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .progress-step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            border: 3px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 8px;
+            font-weight: bold;
+            color: #999;
+            transition: all 0.3s ease;
+        }
+
+        .progress-step.active .progress-step-circle {
+            background: #0f5a8a;
+            border-color: #0f5a8a;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .progress-step.completed .progress-step-circle {
+            background: #43a047;
+            border-color: #43a047;
+            color: white;
+        }
+
+        .progress-step-label {
+            font-size: 0.85em;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .progress-step.active .progress-step-label {
+            color: #0f5a8a;
+        }
+
+        .progress-bar {
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0f5a8a 0%, #0f3460 100%);
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+
         .form-card {
             background-color: #ffffff;
             padding: 50px 40px;
@@ -57,12 +126,24 @@
             margin-bottom: 30px;
             border-left: 5px solid #0f5a8a;
             box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            display: none; /* Ocultar por defecto */
         }
 
-        .section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        .section.active {
+            display: block;
+            animation: slideIn 0.4s ease-in-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         h2 {
@@ -151,16 +232,14 @@
         }
 
         button {
-            width: 100%;
-            padding: 18px;
+            padding: 18px 40px;
             background: linear-gradient(135deg, #0f5a8a 0%, #0f3460 100%);
             color: white;
-            font-size: 1.2em;
+            font-size: 1.1em;
             font-weight: bold;
             border: none;
             border-radius: 12px;
             cursor: pointer;
-            margin-top: 30px;
             transition: all 0.3s ease;
             box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
         }
@@ -172,6 +251,64 @@
 
         button:active {
             transform: translateY(-1px);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* BOTONES DE NAVEGACIÓN */
+        .form-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+            gap: 15px;
+        }
+
+        .btn-prev, .btn-next, .btn-submit {
+            padding: 16px 35px;
+            font-size: 1.1em;
+            font-weight: 600;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .btn-prev {
+            background: #fff;
+            color: #0f5a8a;
+            border: 2px solid #0f5a8a;
+        }
+
+        .btn-prev:hover {
+            background: #0f5a8a;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .btn-next, .btn-submit {
+            background: linear-gradient(135deg, #0f5a8a 0%, #0f3460 100%);
+            color: white;
+            box-shadow: 0 8px 20px rgba(15, 90, 138, 0.3);
+        }
+
+        .btn-next:hover, .btn-submit:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 28px rgba(15, 90, 138, 0.4);
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, #43a047 0%, #2e7d32 100%);
+            box-shadow: 0 8px 20px rgba(67, 160, 71, 0.3);
+        }
+
+        .btn-submit:hover {
+            box-shadow: 0 12px 28px rgba(67, 160, 71, 0.4);
         }
 
         .nav-links {
@@ -252,6 +389,32 @@
             .section {
                 padding: 20px;
             }
+
+            .progress-steps {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .progress-step {
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                text-align: left;
+            }
+
+            .progress-step-circle {
+                margin: 0;
+                flex-shrink: 0;
+            }
+
+            .form-navigation {
+                flex-direction: column;
+            }
+
+            .btn-prev, .btn-next, .btn-submit {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
@@ -261,10 +424,31 @@
     <h1>🚀 Formulario de Emprendedores</h1>
     <p class="subtitle">Completa tu información para participar en el programa de incubación</p>
 
-    <form method="POST" action="/guardar_formulario">
+    <!-- BARRA DE PROGRESO -->
+    <div class="progress-container">
+        <div class="progress-steps">
+            <div class="progress-step active" data-step="1">
+                <div class="progress-step-circle">1</div>
+                <div class="progress-step-label">Información Personal</div>
+            </div>
+            <div class="progress-step" data-step="2">
+                <div class="progress-step-circle">2</div>
+                <div class="progress-step-label">Emprendimiento</div>
+            </div>
+            <div class="progress-step" data-step="3">
+                <div class="progress-step-circle">3</div>
+                <div class="progress-step-label">Líder del Equipo</div>
+            </div>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-bar-fill" id="progressBarFill"></div>
+        </div>
+    </div>
+
+    <form method="POST" action="/guardar_formulario" id="multiStepForm">
 
         <!-- ================= INFORMACIÓN PERSONAL ================= -->
-        <div class="section">
+        <div class="section active" data-step="1">
             <h2><span class="section-number">1</span> Información Personal</h2>
 
             <div class="form-row">
@@ -327,7 +511,7 @@
         </div>
 
         <!-- ================= EMPRENDIMIENTO ================= -->
-        <div class="section">
+        <div class="section" data-step="2">
             <h2><span class="section-number">2</span> Información del Emprendimiento</h2>
 
             <div class="form-group">
@@ -408,7 +592,7 @@
         </div>
 
         <!-- ================= LÍDER ================= -->
-        <div class="section">
+        <div class="section" data-step="3">
             <h2><span class="section-number">3</span> Información del Líder del Equipo</h2>
 
             <div class="form-group">
@@ -432,10 +616,18 @@
             </div>
         </div>
 
-        <!-- ===== BOTÓN ===== -->
-        <button type="submit">
-            ✓ Enviar Formulario para Revisión
-        </button>
+        <!-- BOTONES DE NAVEGACIÓN -->
+        <div class="form-navigation">
+            <button type="button" class="btn-prev" id="btnPrev" style="visibility: hidden;">
+                ← Anterior
+            </button>
+            <button type="button" class="btn-next" id="btnNext">
+                Siguiente →
+            </button>
+            <button type="submit" class="btn-submit" id="btnSubmit" style="display: none;">
+                ✓ Enviar Formulario
+            </button>
+        </div>
 
         <p class="info-text">
             Una vez enviado, tu proyecto quedará en revisión por el administrador.
@@ -448,6 +640,117 @@
         <a href="/logout" class="logout-link">🚪 Cerrar Sesión</a>
     </div>
 </div>
+
+<script>
+    // SISTEMA DE NAVEGACIÓN MULTI-PASO
+    const form = document.getElementById('multiStepForm');
+    const sections = document.querySelectorAll('.section');
+    const progressSteps = document.querySelectorAll('.progress-step');
+    const progressBarFill = document.getElementById('progressBarFill');
+    const btnPrev = document.getElementById('btnPrev');
+    const btnNext = document.getElementById('btnNext');
+    const btnSubmit = document.getElementById('btnSubmit');
+
+    let currentStep = 1;
+    const totalSteps = sections.length;
+
+    // Función para mostrar paso específico
+    function showStep(step) {
+        // Ocultar todas las secciones
+        sections.forEach(section => {
+            section.classList.remove('active');
+        });
+
+        // Mostrar sección actual
+        const currentSection = document.querySelector(`.section[data-step="${step}"]`);
+        if (currentSection) {
+            currentSection.classList.add('active');
+        }
+
+        // Actualizar indicadores de progreso
+        progressSteps.forEach((progressStep, index) => {
+            progressStep.classList.remove('active', 'completed');
+            if (index + 1 < step) {
+                progressStep.classList.add('completed');
+            } else if (index + 1 === step) {
+                progressStep.classList.add('active');
+            }
+        });
+
+        // Actualizar barra de progreso
+        const progressPercent = ((step - 1) / (totalSteps - 1)) * 100;
+        progressBarFill.style.width = progressPercent + '%';
+
+        // Mostrar/ocultar botones
+        if (step === 1) {
+            btnPrev.style.visibility = 'hidden';
+        } else {
+            btnPrev.style.visibility = 'visible';
+        }
+
+        if (step === totalSteps) {
+            btnNext.style.display = 'none';
+            btnSubmit.style.display = 'inline-flex';
+        } else {
+            btnNext.style.display = 'inline-flex';
+            btnSubmit.style.display = 'none';
+        }
+
+        // Scroll suave al inicio del formulario
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Función para validar campos del paso actual
+    function validateCurrentStep() {
+        const currentSection = document.querySelector(`.section[data-step="${currentStep}"]`);
+        const requiredInputs = currentSection.querySelectorAll('[required]');
+        
+        for (let input of requiredInputs) {
+            if (!input.value.trim()) {
+                input.focus();
+                alert('Por favor, completa todos los campos obligatorios antes de continuar.');
+                return false;
+            }
+        }
+        return true;
+    }
+
+    // Botón Siguiente
+    btnNext.addEventListener('click', function() {
+        if (validateCurrentStep()) {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                showStep(currentStep);
+            }
+        }
+    });
+
+    // Botón Anterior
+    btnPrev.addEventListener('click', function() {
+        if (currentStep > 1) {
+            currentStep--;
+            showStep(currentStep);
+        }
+    });
+
+    // Prevenir envío del formulario si no está en el último paso
+    form.addEventListener('submit', function(e) {
+        if (currentStep !== totalSteps) {
+            e.preventDefault();
+            alert('Por favor, completa todos los pasos del formulario.');
+            return false;
+        }
+        
+        // Validar último paso antes de enviar
+        if (!validateCurrentStep()) {
+            e.preventDefault();
+            return false;
+        }
+    });
+
+    // Inicializar
+    showStep(1);
+</script>
 
 </body>
 </html>
