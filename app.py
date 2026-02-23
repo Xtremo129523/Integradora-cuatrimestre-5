@@ -1,8 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
 import re
+import os
+import random
+import smtplib
 import mysql.connector
-from datetime import datetime
+from datetime import datetime, timedelta
 from functools import wraps
+from email.message import EmailMessage
 import io
 from reportlab.pdfgen import canvas
 
@@ -14,6 +18,44 @@ DB_USER = "root"
 DB_PASSWORD = "6382"
 DB_NAME = "emprendedoress"
 DB_PORT = 3307
+
+INSTITUTION_DOMAIN = "@utacapulco.edu.mx"
+
+SMTP_HOST = "smtp.gmail.com"
+SMTP_PORT = 587
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASS = os.getenv("SMTP_PASS", "")
+
+def es_correo_institucional(correo):
+    return bool(correo) and correo.lower().endswith(INSTITUTION_DOMAIN)
+
+
+def generar_codigo_verificacion():
+    return "".join(random.choice("0123456789") for _ in range(6))
+
+
+def smtp_configurado():
+    return bool(SMTP_USER and SMTP_PASS)
+
+
+def enviar_correo(destinatario, asunto, cuerpo):
+    if not smtp_configurado():
+        return False, "SMTP no configurado"
+
+    mensaje = EmailMessage()
+    mensaje["Subject"] = asunto
+    mensaje["From"] = f"Sistema Emprendedores <{SMTP_USER}>"
+    mensaje["To"] = destinatario
+    mensaje.set_content(cuerpo)
+
+    try:
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as smtp:
+            smtp.starttls()
+            smtp.login(SMTP_USER, SMTP_PASS)
+            smtp.send_message(mensaje)
+        return True, None
+    except Exception as exc:
+        return False, str(exc)
 
 # ================= CONEXIÓN =================
 def conexion():
@@ -78,6 +120,27 @@ def solo_aceptado(f):
     return decorated_function
 
 
+@app.before_request
+def validar_correo_institucional_en_sesion():
+    ruta_actual = request.endpoint or ""
+    rutas_permitidas = {
+        "login",
+        "registro",
+        "verificar_correo",
+        "reenviar_codigo",
+        "static",
+    }
+
+    if ruta_actual in rutas_permitidas:
+        return None
+
+    if "usuario_id" in session and session.get("rol") != "admin":
+        correo_sesion = session.get("correo", "")
+        if not es_correo_institucional(correo_sesion):
+            flash("Debes usar un correo institucional para acceder al sistema.", "danger")
+            return redirect(url_for("login"))
+
+
 # ================= LOGIN =================
 @app.route("/", methods=["GET", "POST"])
 def login():
@@ -135,12 +198,26 @@ def login():
             db.close()
             return redirect(url_for("login"))
 
+        # Verificar correo institucional
+        if not es_correo_institucional(usuario["correo"]):
+            flash("Debes usar un correo institucional (@utacapulco.edu.mx)", "danger")
+            cursor.close()
+            db.close()
+            return redirect(url_for("login"))
+
         # Verificar la contraseña
         if usuario["password"] != password:
             flash("Contraseña incorrecta", "danger")
             cursor.close()
             db.close()
             return redirect(url_for("login"))
+
+        # Verificar si el correo ya fue confirmado
+        if not usuario.get("verificado", True):
+            cursor.close()
+            db.close()
+            flash("Debes verificar tu correo antes de iniciar sesión.", "warning")
+            return redirect(url_for("verificar_correo", correo=correo))
 
         # Credenciales correctas - Usuario regular
         session["usuario_id"] = usuario["id"]
@@ -177,6 +254,12 @@ def registro():
         if len(password) < 6:
             return render_template("registro.html", error="La contraseña debe tener al menos 6 caracteres")
 
+        if not smtp_configurado():
+            return render_template(
+                "registro.html",
+                error="El envio de correos no esta configurado. Contacta al administrador."
+            )
+
         db = conexion()
         cursor = db.cursor()
 
@@ -186,19 +269,157 @@ def registro():
             db.close()
             return render_template("registro.html", error="Este correo ya está registrado. Inicia sesión.")
 
+        codigo = generar_codigo_verificacion()
+        expira = datetime.now() + timedelta(minutes=15)
+
         cursor.execute("""
-            INSERT INTO usuarios (correo, password, rol, estado)
-            VALUES (%s, %s, 'alumno', 'pendiente')
-        """, (correo, password))
+            INSERT INTO usuarios (correo, password, rol, estado, verificado, codigo_verificacion, codigo_expira)
+            VALUES (%s, %s, 'alumno', 'pendiente', 0, %s, %s)
+        """, (correo, password, codigo, expira))
+
+        asunto = "Codigo de verificacion"
+        cuerpo = (
+            "Hola,\n\n"
+            "Tu codigo de verificacion es: " + codigo + "\n\n"
+            "Este codigo expira en 15 minutos.\n\n"
+            "Sistema de Gestion de Emprendedores"
+        )
+
+        enviado, error_envio = enviar_correo(correo, asunto, cuerpo)
+        if not enviado:
+            db.rollback()
+            cursor.close()
+            db.close()
+            return render_template(
+                "registro.html",
+                error="No se pudo enviar el correo de verificacion. Intenta mas tarde."
+            )
 
         db.commit()
         cursor.close()
         db.close()
 
-        flash("✓ Cuenta creada correctamente. Ahora puedes iniciar sesión.", "success")
-        return redirect(url_for("login"))
+        flash("Se envio un codigo de verificacion a tu correo.", "success")
+        return redirect(url_for("verificar_correo", correo=correo))
 
     return render_template("registro.html")
+
+
+# ================= VERIFICACION CORREO =================
+@app.route("/verificar_correo", methods=["GET", "POST"])
+def verificar_correo():
+    correo = request.args.get("correo") or request.form.get("correo") or ""
+
+    if request.method == "POST":
+        codigo = request.form.get("codigo", "").strip()
+
+        if not correo or not codigo:
+            return render_template("verificar_correo.html", error="Completa todos los campos", correo=correo)
+
+        db = conexion()
+        cursor = db.cursor(dictionary=True)
+
+        cursor.execute("""
+            SELECT id, codigo_verificacion, codigo_expira, verificado
+            FROM usuarios
+            WHERE correo = %s
+        """, (correo,))
+        usuario = cursor.fetchone()
+
+        if not usuario:
+            cursor.close()
+            db.close()
+            return render_template("verificar_correo.html", error="Usuario no encontrado", correo=correo)
+
+        if usuario.get("verificado"):
+            cursor.close()
+            db.close()
+            flash("Tu correo ya estaba verificado. Inicia sesion.", "info")
+            return redirect(url_for("login"))
+
+        if not usuario.get("codigo_verificacion") or codigo != usuario.get("codigo_verificacion"):
+            cursor.close()
+            db.close()
+            return render_template("verificar_correo.html", error="Codigo incorrecto", correo=correo)
+
+        if usuario.get("codigo_expira") and datetime.now() > usuario["codigo_expira"]:
+            cursor.close()
+            db.close()
+            return render_template("verificar_correo.html", error="El codigo ya expiro", correo=correo)
+
+        cursor.execute("""
+            UPDATE usuarios
+            SET verificado = 1, codigo_verificacion = NULL, codigo_expira = NULL
+            WHERE id = %s
+        """, (usuario["id"],))
+        db.commit()
+        cursor.close()
+        db.close()
+
+        flash("Correo verificado correctamente. Ya puedes iniciar sesion.", "success")
+        return redirect(url_for("login"))
+
+    return render_template("verificar_correo.html", correo=correo)
+
+
+@app.route("/reenviar_codigo", methods=["POST"])
+def reenviar_codigo():
+    correo = request.form.get("correo", "").strip()
+
+    if not correo:
+        return render_template("verificar_correo.html", error="Ingresa tu correo", correo=correo)
+
+    db = conexion()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT id, verificado
+        FROM usuarios
+        WHERE correo = %s
+    """, (correo,))
+    usuario = cursor.fetchone()
+
+    if not usuario:
+        cursor.close()
+        db.close()
+        return render_template("verificar_correo.html", error="Usuario no encontrado", correo=correo)
+
+    if usuario.get("verificado"):
+        cursor.close()
+        db.close()
+        flash("Tu correo ya esta verificado. Inicia sesion.", "info")
+        return redirect(url_for("login"))
+
+    codigo = generar_codigo_verificacion()
+    expira = datetime.now() + timedelta(minutes=15)
+
+    cursor.execute("""
+        UPDATE usuarios
+        SET codigo_verificacion = %s, codigo_expira = %s
+        WHERE id = %s
+    """, (codigo, expira, usuario["id"]))
+    db.commit()
+    cursor.close()
+    db.close()
+
+    asunto = "Codigo de verificacion"
+    cuerpo = (
+        "Hola,\n\n"
+        "Tu codigo de verificacion es: " + codigo + "\n\n"
+        "Este codigo expira en 15 minutos.\n\n"
+        "Sistema de Gestion de Emprendedores"
+    )
+
+    enviado, _ = enviar_correo(correo, asunto, cuerpo)
+    if not enviado:
+        return render_template(
+            "verificar_correo.html",
+            error="No se pudo reenviar el codigo. Intenta mas tarde.",
+            correo=correo
+        )
+
+    flash("Se envio un nuevo codigo a tu correo.", "success")
+    return redirect(url_for("verificar_correo", correo=correo))
 
 
 # ================= PANEL ADMIN =================
@@ -623,6 +844,16 @@ def chat():
     """, (usuario_id,))
     
     mensajes = cursor.fetchall()
+    
+    # Formatear fecha de los mensajes
+    for msg in mensajes:
+        if msg['fecha_creacion']:
+            if isinstance(msg['fecha_creacion'], str):
+                # Si ya es string, dejarla como está
+                pass
+            else:
+                # Si es datetime, convertir a string
+                msg['fecha_creacion'] = msg['fecha_creacion'].strftime('%d/%m/%Y %H:%M')
     
     # Obtener info del usuario (para mostrar en el header del chat)
     # El nombre está en solicitudes, no en usuarios

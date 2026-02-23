@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verificar Correo</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f3460 0%, #0f5a8a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg,
+                transparent 30%,
+                rgba(255,255,255,0.1) 50%,
+                transparent 70%);
+            animation: moveBackground 15s ease-in-out infinite;
+        }
+
+        @keyframes moveBackground {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            50% { transform: translate(-30%, -30%) rotate(180deg); }
+        }
+
+        .verify-container {
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            padding: 45px 40px;
+            border-radius: 25px;
+            box-shadow: 0 25px 45px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-width: 460px;
+        }
+
+        .verify-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo {
+            width: 70px;
+            height: 70px;
+            background: linear-gradient(135deg, #0f5a8a, #0f3460);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            font-size: 32px;
+            box-shadow: 0 10px 25px rgba(15, 90, 138, 0.4);
+        }
+
+        h2 {
+            color: #ffffff;
+            font-size: 26px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            font-weight: 300;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            color: #ffffff;
+            font-weight: 500;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid transparent;
+            border-radius: 12px;
+            outline: none;
+            font-size: 15px;
+            transition: all 0.3s ease;
+            color: #333;
+        }
+
+        .input-group input:focus {
+            background: #ffffff;
+            border-color: #0f3460;
+            box-shadow: 0 5px 20px rgba(118, 75, 162, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #0f5a8a 0%, #0f3460 100%);
+            color: white;
+            font-size: 15px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(15, 90, 138, 0.4);
+            margin-bottom: 12px;
+        }
+
+        .btn-secondary {
+            width: 100%;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .alert {
+            background: rgba(255, 59, 48, 0.2);
+            color: #ffffff;
+            padding: 12px 14px;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 59, 48, 0.4);
+            text-align: center;
+            font-size: 14px;
+        }
+
+        .hint {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 12px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="verify-container">
+        <div class="verify-header">
+            <div class="logo">📧</div>
+            <h2>Verificar Correo</h2>
+            <p class="subtitle">Ingresa el codigo que enviamos a tu correo</p>
+        </div>
+
+        {% if error %}
+            <div class="alert">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST" action="{{ url_for('verificar_correo') }}">
+            <div class="input-group">
+                <label>Correo institucional</label>
+                <input type="email" name="correo" value="{{ correo }}" placeholder="2023xxxx@utacapulco.edu.mx" required>
+            </div>
+
+            <div class="input-group">
+                <label>Codigo de verificacion</label>
+                <input type="text" name="codigo" placeholder="Ej: 482913" maxlength="6" required>
+            </div>
+
+            <button type="submit" class="btn-primary">Verificar</button>
+        </form>
+
+        <form method="POST" action="{{ url_for('reenviar_codigo') }}">
+            <input type="hidden" name="correo" value="{{ correo }}">
+            <button type="submit" class="btn-secondary">Reenviar codigo</button>
+        </form>
+
+        <p class="hint">El codigo expira en 15 minutos.</p>
+    </div>
+</body>
+</html>
