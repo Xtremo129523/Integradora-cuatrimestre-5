@@ -194,6 +194,21 @@
             margin-bottom: 20px;
         }
 
+        .image-preview {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .image-preview img {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 2px solid rgba(15, 90, 138, 0.25);
+        }
+
         .form-group.invalid input,
         .form-group.invalid textarea,
         .form-group.invalid select {
@@ -474,6 +489,8 @@
             }
         }
     </style>
+    <!-- Sistema de alertas y validaciones -->
+    <script src="{{ url_for('static', filename='alerts.js') }}"></script>
 </head>
 <body>
 
@@ -488,7 +505,7 @@
         <div class="progress-steps">
             <div class="progress-step active" data-step="1">
                 <div class="progress-step-circle">1</div>
-                <div class="progress-step-label">Información Personal</div>
+                <div class="progress-step-label">Líder del Equipo</div>
             </div>
             <div class="progress-step" data-step="2">
                 <div class="progress-step-circle">2</div>
@@ -496,7 +513,7 @@
             </div>
             <div class="progress-step" data-step="3">
                 <div class="progress-step-circle">3</div>
-                <div class="progress-step-label">Líder del Equipo</div>
+                <div class="progress-step-label">Equipo e Integrantes</div>
             </div>
         </div>
         <div class="progress-bar">
@@ -506,114 +523,108 @@
 
     <form method="POST" action="/guardar_formulario" id="multiStepForm" enctype="multipart/form-data">
 
-        <!-- ================= INFORMACIÓN PERSONAL ================= -->
-        <div class="section active" data-step="1">
-            <h2><span class="section-number">1</span> Información Personal</h2>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre completo <span class="required-indicator">*</span></label>
-                    <input type="text" name="nombre" placeholder="Ej: Juan Pérez García" required>
-                    <div class="field-error">Este campo es obligatorio.</div>
-                </div>
-
-                <div class="form-group">
-                    <label>Foto del alumno <span class="required-indicator">*</span></label>
-                    <input type="file" name="foto_alumno" accept="image/*" required>
-                    <div class="field-error">Sube una foto tuya.</div>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Edad <span class="required-indicator">*</span></label>
-                    <input type="number" name="edad" placeholder="Ej: 22" min="18" max="99" required>
-                    <div class="field-error">Ingresa una edad válida.</div>
-                </div>
-
-                <div class="form-group">
-                    <label>Carrera <span class="required-indicator">*</span></label>
-                    <input type="text" name="carrera" placeholder="Ej: Ingeniería en Sistemas" required>
-                    <div class="field-error">Este campo es obligatorio.</div>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nivel <span class="required-indicator">*</span></label>
-                    <input type="text" name="nivel" placeholder="Ej: 8vo cuatrimestre" required>
-                    <div class="field-error">Este campo es obligatorio.</div>
-                </div>
-
-                <div class="form-group">
-                    <label>Matrícula <span class="required-indicator">*</span></label>
-                    <input type="text" name="matricula" placeholder="Ej: 202304105" required>
-                    <div class="field-error">Este campo es obligatorio.</div>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Número telefónico <span class="required-indicator">*</span></label>
-                    <input type="text" name="telefono" placeholder="Ej: 7441234567" required>
-                    <div class="field-error">Este campo es obligatorio.</div>
-                </div>
-
-                <div class="form-group">
-                    <label>Dirección <span class="required-indicator">*</span></label>
-                    <input type="text" name="direccion" placeholder="Calle, número, colonia, ciudad" required>
-                    <div class="field-error">Este campo es obligatorio.</div>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Asesor académico 1 <span class="required-indicator">*</span></label>
-                    <input type="text" name="asesor_1" placeholder="Nombre del primer asesor" required>
-                    <div class="field-error">Este campo es obligatorio.</div>
-                </div>
-
-                <div class="form-group">
-                    <label>Asesor académico 2 <span class="required-indicator">*</span></label>
-                    <input type="text" name="asesor_2" placeholder="Nombre del segundo asesor" required>
-                    <div class="field-error">Este campo es obligatorio.</div>
-                </div>
-            </div>
+        <!-- ================= EQUIPO E INTEGRANTES ================= -->
+        <div class="section" data-step="3">
+            <h2><span class="section-number">3</span> Equipo e Integrantes</h2>
 
             <div class="form-group">
-                <label>Número de integrantes en el equipo <span class="required-indicator">*</span></label>
-                <input type="number" name="integrantes" placeholder="Ej: 4" min="1" max="20" required>
-                <div class="field-error">Ingresa un numero valido.</div>
+                <label>Número de integrantes en el equipo (max 5)</label>
+                <input type="number" name="integrantes" placeholder="Ej: 2" min="0" max="5">
             </div>
 
             <!-- INTEGRANTE 1 -->
             <div class="form-row">
                 <div class="form-group">
-                    <label>Nombre del integrante 1 <span class="required-indicator">*</span></label>
-                    <input type="text" name="integrante_1_nombre" placeholder="Ej: Carlos López" required>
-                    <div class="field-error">Este campo es obligatorio.</div>
+                    <label>Nombre del integrante 1 (opcional)</label>
+                    <input type="text" name="integrante_1_nombre" placeholder="Ej: Carlos Lopez">
                 </div>
 
                 <div class="form-group">
-                    <label>Foto del integrante 1 <span class="required-indicator">*</span></label>
-                    <input type="file" name="integrante_1_foto" accept="image/*" required>
-                    <div class="field-error">Sube una foto del integrante.</div>
+                    <label>Foto del integrante 1 (opcional)</label>
+                    <input type="file" name="integrante_1_foto" accept="image/*">
+                    <div class="image-preview" id="preview_integrante_1_foto"></div>
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label>Descripcion breve del integrante 1 (opcional)</label>
+                <textarea name="integrante_1_descripcion" placeholder="Ej: Encargado de diseno y presentacion" maxlength="150"></textarea>
             </div>
 
             <!-- INTEGRANTE 2 -->
             <div class="form-row">
                 <div class="form-group">
-                    <label>Nombre del integrante 2 <span class="required-indicator">*</span></label>
-                    <input type="text" name="integrante_2_nombre" placeholder="Ej: María González" required>
-                    <div class="field-error">Este campo es obligatorio.</div>
+                    <label>Nombre del integrante 2 (opcional)</label>
+                    <input type="text" name="integrante_2_nombre" placeholder="Ej: Maria Gonzalez">
                 </div>
 
                 <div class="form-group">
-                    <label>Foto del integrante 2 <span class="required-indicator">*</span></label>
-                    <input type="file" name="integrante_2_foto" accept="image/*" required>
-                    <div class="field-error">Sube una foto del integrante.</div>
+                    <label>Foto del integrante 2 (opcional)</label>
+                    <input type="file" name="integrante_2_foto" accept="image/*">
+                    <div class="image-preview" id="preview_integrante_2_foto"></div>
                 </div>
+            </div>
+
+            <div class="form-group">
+                <label>Descripcion breve del integrante 2 (opcional)</label>
+                <textarea name="integrante_2_descripcion" placeholder="Ej: Apoyo en marketing y ventas" maxlength="150"></textarea>
+            </div>
+
+            <!-- INTEGRANTE 3 -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre del integrante 3 (opcional)</label>
+                    <input type="text" name="integrante_3_nombre" placeholder="Ej: Luis Perez">
+                </div>
+
+                <div class="form-group">
+                    <label>Foto del integrante 3 (opcional)</label>
+                    <input type="file" name="integrante_3_foto" accept="image/*">
+                    <div class="image-preview" id="preview_integrante_3_foto"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Descripcion breve del integrante 3 (opcional)</label>
+                <textarea name="integrante_3_descripcion" placeholder="Ej: Apoyo en investigacion" maxlength="150"></textarea>
+            </div>
+
+            <!-- INTEGRANTE 4 -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre del integrante 4 (opcional)</label>
+                    <input type="text" name="integrante_4_nombre" placeholder="Ej: Ana Ruiz">
+                </div>
+
+                <div class="form-group">
+                    <label>Foto del integrante 4 (opcional)</label>
+                    <input type="file" name="integrante_4_foto" accept="image/*">
+                    <div class="image-preview" id="preview_integrante_4_foto"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Descripcion breve del integrante 4 (opcional)</label>
+                <textarea name="integrante_4_descripcion" placeholder="Ej: Apoyo en finanzas" maxlength="150"></textarea>
+            </div>
+
+            <!-- INTEGRANTE 5 -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre del integrante 5 (opcional)</label>
+                    <input type="text" name="integrante_5_nombre" placeholder="Ej: Diego Cruz">
+                </div>
+
+                <div class="form-group">
+                    <label>Foto del integrante 5 (opcional)</label>
+                    <input type="file" name="integrante_5_foto" accept="image/*">
+                    <div class="image-preview" id="preview_integrante_5_foto"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Descripcion breve del integrante 5 (opcional)</label>
+                <textarea name="integrante_5_descripcion" placeholder="Ej: Apoyo en ventas" maxlength="150"></textarea>
             </div>
         </div>
 
@@ -713,8 +724,85 @@
         </div>
 
         <!-- ================= LÍDER ================= -->
-        <div class="section" data-step="3">
-            <h2><span class="section-number">3</span> Información del Líder del Equipo</h2>
+        <div class="section active" data-step="1">
+            <h2><span class="section-number">1</span> Información del Líder del Equipo</h2>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre completo <span class="required-indicator">*</span></label>
+                    <input type="text" name="nombre" placeholder="Ej: Juan Pérez García" required>
+                    <div class="field-error">Este campo es obligatorio.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Foto del alumno <span class="required-indicator">*</span></label>
+                    <input type="file" name="foto_alumno" accept="image/*" required>
+                    <div class="field-error">Sube una foto tuya.</div>
+                    <div class="image-preview" id="preview_foto_alumno"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Descripcion breve del alumno <span class="required-indicator">*</span></label>
+                <textarea name="alumno_descripcion" placeholder="Ej: Responsable de la parte tecnica" maxlength="150" required></textarea>
+                <div class="field-error">Escribe una descripcion corta.</div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Edad <span class="required-indicator">*</span></label>
+                    <input type="number" name="edad" placeholder="Ej: 22" min="18" max="99" required>
+                    <div class="field-error">Ingresa una edad válida.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Carrera <span class="required-indicator">*</span></label>
+                    <input type="text" name="carrera" placeholder="Ej: Ingeniería en Sistemas" required>
+                    <div class="field-error">Este campo es obligatorio.</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nivel <span class="required-indicator">*</span></label>
+                    <input type="text" name="nivel" placeholder="Ej: 8vo cuatrimestre" required>
+                    <div class="field-error">Este campo es obligatorio.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Matrícula <span class="required-indicator">*</span></label>
+                    <input type="text" name="matricula" placeholder="Ej: 202304105" required>
+                    <div class="field-error">Este campo es obligatorio.</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Número telefónico <span class="required-indicator">*</span></label>
+                    <input type="text" name="telefono" placeholder="Ej: 7441234567" required>
+                    <div class="field-error">Este campo es obligatorio.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Dirección <span class="required-indicator">*</span></label>
+                    <input type="text" name="direccion" placeholder="Calle, número, colonia, ciudad" required>
+                    <div class="field-error">Este campo es obligatorio.</div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Asesor académico 1 <span class="required-indicator">*</span></label>
+                    <input type="text" name="asesor_1" placeholder="Nombre del primer asesor" required>
+                    <div class="field-error">Este campo es obligatorio.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Asesor académico 2 <span class="required-indicator">*</span></label>
+                    <input type="text" name="asesor_2" placeholder="Nombre del segundo asesor" required>
+                    <div class="field-error">Este campo es obligatorio.</div>
+                </div>
+            </div>
 
             <div class="form-group">
                 <label>Descríbete <span class="required-indicator">*</span></label>
@@ -895,6 +983,115 @@
         if (!validateCurrentStep()) {
             e.preventDefault();
             return false;
+        }
+    });
+
+    // ================= COMPRESION DE IMAGENES =================
+    const IMAGE_MAX_MB = 2;
+    const IMAGE_MAX_WIDTH = 800;
+    const IMAGE_QUALITY = 0.7;
+    const IMAGE_INPUTS = [
+        'foto_alumno',
+        'integrante_1_foto',
+        'integrante_2_foto',
+        'integrante_3_foto',
+        'integrante_4_foto',
+        'integrante_5_foto'
+    ];
+
+    function fileToDataUrl(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function compressImage(file) {
+        const dataUrl = await fileToDataUrl(file);
+        const img = new Image();
+        img.src = dataUrl;
+
+        await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = reject;
+        });
+
+        const scale = Math.min(1, IMAGE_MAX_WIDTH / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise((resolve) =>
+            canvas.toBlob(resolve, 'image/jpeg', IMAGE_QUALITY)
+        );
+
+        return new File([blob], file.name.replace(/\.[^/.]+$/, '.jpg'), {
+            type: 'image/jpeg'
+        });
+    }
+
+    async function handleImageInput(input) {
+        const file = input.files && input.files[0];
+        if (!file) {
+            clearPreview(input);
+            return;
+        }
+
+        if (!file.type.startsWith('image/')) {
+            alert('Solo se permiten imagenes.');
+            input.value = '';
+            return;
+        }
+
+        try {
+            const compressed = await compressImage(file);
+            const maxBytes = IMAGE_MAX_MB * 1024 * 1024;
+
+            if (compressed.size > maxBytes) {
+                alert('La imagen es muy pesada. Usa una imagen mas pequena.');
+                input.value = '';
+                clearPreview(input);
+                return;
+            }
+
+            const dt = new DataTransfer();
+            dt.items.add(compressed);
+            input.files = dt.files;
+            setPreview(input, compressed);
+        } catch (error) {
+            alert('No se pudo procesar la imagen.');
+            input.value = '';
+            clearPreview(input);
+        }
+    }
+
+    function getPreviewContainer(input) {
+        const previewId = `preview_${input.name}`;
+        return document.getElementById(previewId);
+    }
+
+    function setPreview(input, file) {
+        const container = getPreviewContainer(input);
+        if (!container) return;
+        const url = URL.createObjectURL(file);
+        container.innerHTML = `<img src="${url}" alt="Previsualizacion">`;
+    }
+
+    function clearPreview(input) {
+        const container = getPreviewContainer(input);
+        if (!container) return;
+        container.innerHTML = '';
+    }
+
+    IMAGE_INPUTS.forEach((name) => {
+        const input = document.querySelector(`input[name="${name}"]`);
+        if (input) {
+            input.addEventListener('change', () => handleImageInput(input));
         }
     });
 

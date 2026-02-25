@@ -178,6 +178,40 @@
             color: #555;
         }
 
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+        }
+
+        .photo-card {
+            background: #ffffff;
+            border-radius: 14px;
+            border: 1px solid rgba(15, 90, 138, 0.2);
+            padding: 15px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+
+        .photo-card .photo-name {
+            font-weight: 600;
+            color: #0f5a8a;
+            margin-bottom: 6px;
+        }
+
+        .photo-card .photo-desc {
+            color: #555;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
         /* Botones de acción */
         .action-buttons {
             background: rgba(255, 255, 255, 0.95);
@@ -481,12 +515,12 @@
                     <div class="info-value">{{ solicitud.telefono }}</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Asesor Académico</div>
-                    <div class="info-value">{{ solicitud.asesor_academico }}</div>
+                    <div class="info-label">Asesor Academico 1</div>
+                    <div class="info-value">{{ solicitud.asesor_academico_1 }}</div>
                 </div>
                 <div class="info-item">
-                    <div class="info-label">Tutor</div>
-                    <div class="info-value">{{ solicitud.tutor }}</div>
+                    <div class="info-label">Asesor Academico 2</div>
+                    <div class="info-value">{{ solicitud.asesor_academico_2 }}</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">Dirección</div>
@@ -496,6 +530,73 @@
                     <div class="info-label">Número de Integrantes</div>
                     <div class="info-value">{{ solicitud.numero_integrantes }} personas</div>
                 </div>
+            </div>
+        </div>
+
+        <!-- Fotos y equipo -->
+        <div class="section">
+            <div class="section-title">
+                <span>📸</span>
+                <span>Fotos y Equipo</span>
+            </div>
+            <div class="photo-grid">
+                {% if solicitud.foto_alumno %}
+                <div class="photo-card">
+                    <img src="{{ url_for('descargar_archivo', filepath=solicitud.foto_alumno | replace('\\', '/')) }}" alt="Foto del alumno">
+                    <div class="photo-name">{{ solicitud.nombre }}</div>
+                    <div class="photo-desc">{{ solicitud.alumno_descripcion }}</div>
+                </div>
+                {% endif %}
+
+                {% if solicitud.integrante_1_foto or solicitud.integrante_1_nombre %}
+                <div class="photo-card">
+                    {% if solicitud.integrante_1_foto %}
+                    <img src="{{ url_for('descargar_archivo', filepath=solicitud.integrante_1_foto | replace('\\', '/')) }}" alt="Foto integrante 1">
+                    {% endif %}
+                    <div class="photo-name">{{ solicitud.integrante_1_nombre }}</div>
+                    <div class="photo-desc">{{ solicitud.integrante_1_descripcion }}</div>
+                </div>
+                {% endif %}
+
+                {% if solicitud.integrante_2_foto or solicitud.integrante_2_nombre %}
+                <div class="photo-card">
+                    {% if solicitud.integrante_2_foto %}
+                    <img src="{{ url_for('descargar_archivo', filepath=solicitud.integrante_2_foto | replace('\\', '/')) }}" alt="Foto integrante 2">
+                    {% endif %}
+                    <div class="photo-name">{{ solicitud.integrante_2_nombre }}</div>
+                    <div class="photo-desc">{{ solicitud.integrante_2_descripcion }}</div>
+                </div>
+                {% endif %}
+
+                {% if solicitud.integrante_3_foto or solicitud.integrante_3_nombre %}
+                <div class="photo-card">
+                    {% if solicitud.integrante_3_foto %}
+                    <img src="{{ url_for('descargar_archivo', filepath=solicitud.integrante_3_foto | replace('\\', '/')) }}" alt="Foto integrante 3">
+                    {% endif %}
+                    <div class="photo-name">{{ solicitud.integrante_3_nombre }}</div>
+                    <div class="photo-desc">{{ solicitud.integrante_3_descripcion }}</div>
+                </div>
+                {% endif %}
+
+                {% if solicitud.integrante_4_foto or solicitud.integrante_4_nombre %}
+                <div class="photo-card">
+                    {% if solicitud.integrante_4_foto %}
+                    <img src="{{ url_for('descargar_archivo', filepath=solicitud.integrante_4_foto | replace('\\', '/')) }}" alt="Foto integrante 4">
+                    {% endif %}
+                    <div class="photo-name">{{ solicitud.integrante_4_nombre }}</div>
+                    <div class="photo-desc">{{ solicitud.integrante_4_descripcion }}</div>
+                </div>
+                {% endif %}
+
+                {% if solicitud.integrante_5_foto or solicitud.integrante_5_nombre %}
+                <div class="photo-card">
+                    {% if solicitud.integrante_5_foto %}
+                    <img src="{{ url_for('descargar_archivo', filepath=solicitud.integrante_5_foto | replace('\\', '/')) }}" alt="Foto integrante 5">
+                    {% endif %}
+                    <div class="photo-name">{{ solicitud.integrante_5_nombre }}</div>
+                    <div class="photo-desc">{{ solicitud.integrante_5_descripcion }}</div>
+                </div>
+                {% endif %}
             </div>
         </div>
 

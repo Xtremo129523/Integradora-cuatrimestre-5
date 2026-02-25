@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file
+from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify, abort
 import re
 import os
 import random
@@ -9,10 +9,17 @@ from functools import wraps
 from email.message import EmailMessage
 import io
 from reportlab.pdfgen import canvas
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 app.secret_key = "clave_super_secreta"
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+app.config['UPLOAD_FOLDER'] = 'uploads'
+
+# Extensiones permitidas para archivos
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'doc', 'docx'}
+ALLOWED_IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_DOCUMENT_EXTENSIONS = {'pdf', 'doc', 'docx'}
 
 DB_HOST = "127.0.0.1"
 DB_USER = "root"
@@ -57,6 +64,53 @@ def enviar_correo(destinatario, asunto, cuerpo):
         return True, None
     except Exception as exc:
         return False, str(exc)
+
+
+# ================= VALIDACIÓN DE ARCHIVOS =================
+def allowed_file(filename, allowed_extensions=None):
+    """Verifica si el archivo tiene una extensión permitida"""
+    if allowed_extensions is None:
+        allowed_extensions = ALLOWED_EXTENSIONS
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in allowed_extensions
+
+
+def validar_archivo(file, tipo='imagen'):
+    """Valida archivos subidos por tipo, extensión y tamaño"""
+    if not file:
+        return False, "No se proporcionó ningún archivo"
+    
+    if file.filename == '':
+        return False, "Nombre de archivo vacío"
+    
+    # Validar extensión según tipo
+    if tipo == 'imagen':
+        if not allowed_file(file.filename, ALLOWED_IMAGE_EXTENSIONS):
+            return False, f"Tipo de archivo no permitido. Solo se permiten: {', '.join(ALLOWED_IMAGE_EXTENSIONS)}"
+    elif tipo == 'documento':
+        if not allowed_file(file.filename, ALLOWED_DOCUMENT_EXTENSIONS):
+            return False, f"Tipo de archivo no permitido. Solo se permiten: {', '.join(ALLOWED_DOCUMENT_EXTENSIONS)}"
+    else:
+        if not allowed_file(file.filename):
+            return False, f"Tipo de archivo no permitido. Solo se permiten: {', '.join(ALLOWED_EXTENSIONS)}"
+    
+    # Validar tamaño (ya manejado por MAX_CONTENT_LENGTH, pero agregamos validación adicional)
+    file.seek(0, 2)  # Ir al final del archivo
+    size = file.tell()
+    file.seek(0)  # Volver al inicio
+    
+    max_size = 16 * 1024 * 1024  # 16 MB
+    if size > max_size:
+        return False, f"El archivo es demasiado grande. Tamaño máximo: {max_size // (1024*1024)}MB"
+    
+    if size == 0:
+        return False, "El archivo está vacío"
+    
+    return True, "Archivo válido"
+
+
+def sanitizar_filename(filename):
+    """Sanitiza el nombre del archivo para evitar problemas de seguridad"""
+    return secure_filename(filename)
 
 # ================= CONEXIÓN =================
 def conexion():
@@ -140,6 +194,60 @@ def validar_correo_institucional_en_sesion():
         if not es_correo_institucional(correo_sesion):
             flash("Debes usar un correo institucional para acceder al sistema.", "danger")
             return redirect(url_for("login"))
+
+
+# ================= MANEJADORES DE ERRORES =================
+@app.errorhandler(403)
+def forbidden(e):
+    """Manejador de errores 403 - Acceso prohibido"""
+    if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+        return jsonify({"error": "Acceso prohibido", "status": 403}), 403
+    flash("⛔ Acceso prohibido. No tienes permiso para acceder a este recurso.", "danger")
+    return render_template("login.html"), 403
+
+
+@app.errorhandler(404)
+def not_found(e):
+    """Manejador de errores 404 - Página no encontrada"""
+    if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+        return jsonify({"error": "Recurso no encontrado", "status": 404}), 404
+    flash("❌ Página no encontrada. Verifica la URL.", "warning")
+    return render_template("login.html"), 404
+
+
+@app.errorhandler(413)
+def request_entity_too_large(e):
+    """Manejador de errores 413 - Archivo demasiado grande"""
+    if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+        return jsonify({"error": "Archivo demasiado grande", "status": 413, "max_size": "16MB"}), 413
+    flash("📦 El archivo es demasiado grande. Tamaño máximo permitido: 16MB", "danger")
+    return redirect(request.referrer or url_for("inicio"))
+
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    """Manejador de errores 500 - Error interno del servidor"""
+    if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+        return jsonify({"error": "Error interno del servidor", "status": 500}), 500
+    flash("💥 Ocurrió un error interno. Por favor, intenta de nuevo más tarde.", "danger")
+    return render_template("login.html"), 500
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """Manejador genérico de excepciones"""
+    # Si es un error HTTP conocido, dejarlo pasar
+    if hasattr(e, 'code'):
+        return e
+    
+    # Log del error (en producción usar logging apropiado)
+    print(f"Error no controlado: {str(e)}")
+    
+    if request.accept_mimetypes.accept_json and not request.accept_mimetypes.accept_html:
+        return jsonify({"error": "Error inesperado", "status": 500}), 500
+    
+    flash("⚠️ Ocurrió un error inesperado. Por favor, contacta al administrador.", "danger")
+    return redirect(url_for("login"))
 
 
 # ================= SERVIR ARCHIVOS SUBIDOS =================
@@ -636,23 +744,34 @@ def inicio():
 # ================= GUARDAR FORMULARIO =================
 
 def guardar_archivo(file, usuario_id, tipo="foto"):
-    """Guardar archivo subido y retornar la ruta relativa"""
+    """Guardar archivo subido y retornar la ruta relativa con validación"""
     if not file or file.filename == '':
-        return None
+        return None, "No se proporcionó archivo"
+    
+    # Validar el archivo según tipo
+    tipo_validacion = 'imagen' if tipo == 'foto' else 'general'
+    es_valido, mensaje = validar_archivo(file, tipo_validacion)
+    
+    if not es_valido:
+        return None, mensaje
     
     # Crear carpeta de uploads si no existe
-    upload_dir = os.path.join("uploads", str(usuario_id))
+    upload_dir = os.path.join(app.config['UPLOAD_FOLDER'], str(usuario_id))
     os.makedirs(upload_dir, exist_ok=True)
     
-    # Generar nombre único para el archivo
-    ext = os.path.splitext(file.filename)[1]
+    # Sanitizar y generar nombre único para el archivo
+    filename_seguro = sanitizar_filename(file.filename)
+    ext = os.path.splitext(filename_seguro)[1]
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     filename = f"{tipo}_{timestamp}{ext}"
     
     filepath = os.path.join(upload_dir, filename)
-    file.save(filepath)
     
-    return filepath
+    try:
+        file.save(filepath)
+        return filepath, "Archivo guardado exitosamente"
+    except Exception as e:
+        return None, f"Error al guardar archivo: {str(e)}"
 
 
 @app.route("/guardar_formulario", methods=["POST"])
@@ -669,11 +788,28 @@ def guardar_formulario():
 
     try:
         usuario_id = session["usuario_id"]
+
+        numero_integrantes = request.form.get("integrantes")
+        if numero_integrantes:
+            try:
+                if int(numero_integrantes) > 5:
+                    flash("El maximo de integrantes permitidos es 5.", "danger")
+                    return redirect(url_for("inicio"))
+            except ValueError:
+                flash("El numero de integrantes no es valido.", "danger")
+                return redirect(url_for("inicio"))
         
-        # Guardar archivos
-        foto_alumno = guardar_archivo(request.files.get('foto_alumno'), usuario_id, "alumno")
-        integrante_1_foto = guardar_archivo(request.files.get('integrante_1_foto'), usuario_id, "integrante_1")
-        integrante_2_foto = guardar_archivo(request.files.get('integrante_2_foto'), usuario_id, "integrante_2")
+        # Guardar archivos con validación
+        foto_alumno, msg1 = guardar_archivo(request.files.get('foto_alumno'), usuario_id, "alumno")
+        if not foto_alumno and request.files.get('foto_alumno'):
+            flash(f"Error en foto principal: {msg1}", "danger")
+            return redirect(url_for("inicio"))
+            
+        integrante_1_foto, _ = guardar_archivo(request.files.get('integrante_1_foto'), usuario_id, "integrante_1")
+        integrante_2_foto, _ = guardar_archivo(request.files.get('integrante_2_foto'), usuario_id, "integrante_2")
+        integrante_3_foto, _ = guardar_archivo(request.files.get('integrante_3_foto'), usuario_id, "integrante_3")
+        integrante_4_foto, _ = guardar_archivo(request.files.get('integrante_4_foto'), usuario_id, "integrante_4")
+        integrante_5_foto, _ = guardar_archivo(request.files.get('integrante_5_foto'), usuario_id, "integrante_5")
         
         cursor.execute("""
             INSERT INTO solicitudes (
@@ -689,10 +825,22 @@ def guardar_formulario():
                 direccion,
                 numero_integrantes,
                 foto_alumno,
+                alumno_descripcion,
                 integrante_1_nombre,
                 integrante_1_foto,
+                integrante_1_descripcion,
                 integrante_2_nombre,
                 integrante_2_foto,
+                integrante_2_descripcion,
+                integrante_3_nombre,
+                integrante_3_foto,
+                integrante_3_descripcion,
+                integrante_4_nombre,
+                integrante_4_foto,
+                integrante_4_descripcion,
+                integrante_5_nombre,
+                integrante_5_foto,
+                integrante_5_descripcion,
                 descripcion_proyecto,
                 ubicacion_emprendimiento,
                 fecha_inicio_emprendimiento,
@@ -718,43 +866,56 @@ def guardar_formulario():
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                 %s,%s,%s,%s,%s,'pendiente'
             )
         """, (
             usuario_id,
-            request.form["nombre"],
-            request.form["edad"],
-            request.form["carrera"],
-            request.form["nivel"],
-            request.form["matricula"],
-            request.form["asesor_1"],
-            request.form["asesor_2"],
-            request.form["telefono"],
-            request.form["direccion"],
-            request.form["integrantes"],
+            request.form.get("nombre"),
+            request.form.get("edad"),
+            request.form.get("carrera"),
+            request.form.get("nivel"),
+            request.form.get("matricula"),
+            request.form.get("asesor_1"),
+            request.form.get("asesor_2"),
+            request.form.get("telefono"),
+            request.form.get("direccion"),
+            numero_integrantes or None,
             foto_alumno,
-            request.form["integrante_1_nombre"],
+            request.form.get("alumno_descripcion"),
+            request.form.get("integrante_1_nombre"),
             integrante_1_foto,
-            request.form["integrante_2_nombre"],
+            request.form.get("integrante_1_descripcion"),
+            request.form.get("integrante_2_nombre"),
             integrante_2_foto,
-            request.form["descripcion"],
-            request.form["ubicacion"],
-            request.form["inicio_emprendimiento"],
-            request.form["clientes"],
-            request.form["problema"],
-            request.form["producto"],
-            request.form["innovacion"],
-            request.form["valor"],
-            request.form["idea7"],
-            request.form["nombre_proyecto"],
-            request.form["sat"],
-            request.form["trabajadores"],
-            request.form["incubacion"],
-            request.form["convocatoria"],
-            request.form["lider_descripcion"],
-            request.form["rol"],
-            request.form["habilidades"],
-            request.form["asombroso"],
+            request.form.get("integrante_2_descripcion"),
+            request.form.get("integrante_3_nombre"),
+            integrante_3_foto,
+            request.form.get("integrante_3_descripcion"),
+            request.form.get("integrante_4_nombre"),
+            integrante_4_foto,
+            request.form.get("integrante_4_descripcion"),
+            request.form.get("integrante_5_nombre"),
+            integrante_5_foto,
+            request.form.get("integrante_5_descripcion"),
+            request.form.get("descripcion"),
+            request.form.get("ubicacion"),
+            request.form.get("inicio_emprendimiento"),
+            request.form.get("clientes"),
+            request.form.get("problema"),
+            request.form.get("producto"),
+            request.form.get("innovacion"),
+            request.form.get("valor"),
+            request.form.get("idea7"),
+            request.form.get("nombre_proyecto"),
+            request.form.get("sat"),
+            request.form.get("trabajadores"),
+            request.form.get("incubacion"),
+            request.form.get("convocatoria"),
+            request.form.get("lider_descripcion"),
+            request.form.get("rol"),
+            request.form.get("habilidades"),
+            request.form.get("asombroso"),
             datetime.now()
         ))
 
@@ -1119,6 +1280,123 @@ def crear_notificacion(usuario_id, tipo, titulo, mensaje, solicitud_id=None, enl
     except Exception as e:
         db.rollback()
         print(f"Error al crear notificación: {str(e)}")
+    
+    finally:
+        cursor.close()
+        db.close()
+
+
+# ================= API PARA VALIDACIÓN AJAX =================
+@app.route("/api/validar_archivo", methods=["POST"])
+@login_requerido
+def api_validar_archivo():
+    """Endpoint para validar archivos vía AJAX antes de subirlos"""
+    if 'archivo' not in request.files:
+        return jsonify({"error": "No se proporcionó archivo", "status": 400}), 400
+    
+    file = request.files['archivo']
+    tipo = request.form.get('tipo', 'general')
+    
+    tipo_validacion = 'imagen' if tipo in ['foto', 'imagen'] else 'general'
+    es_valido, mensaje = validar_archivo(file, tipo_validacion)
+    
+    if es_valido:
+        return jsonify({
+            "mensaje": "Archivo válido",
+            "tipo": "success",
+            "valido": True,
+            "nombre": file.filename,
+            "tamano": file.tell()
+        }), 200
+    else:
+        return jsonify({
+            "error": mensaje,
+            "tipo": "error",
+            "valido": False
+        }), 400
+
+
+@app.route("/api/verificar_sesion", methods=["GET"])
+def api_verificar_sesion():
+    """Endpoint para verificar si hay sesión activa vía AJAX"""
+    if "usuario_id" in session:
+        return jsonify({
+            "activa": True,
+            "usuario_id": session["usuario_id"],
+            "correo": session.get("correo"),
+            "rol": session.get("rol"),
+            "estado": session.get("estado")
+        }), 200
+    else:
+        return jsonify({
+            "activa": False,
+            "mensaje": "No hay sesión activa"
+        }), 401
+
+
+@app.route("/api/notificaciones/count", methods=["GET"])
+@login_requerido
+def api_notificaciones_count():
+    """Obtener cantidad de notificaciones no leídas vía AJAX"""
+    db = conexion()
+    cursor = db.cursor()
+    
+    try:
+        cursor.execute("""
+            SELECT COUNT(*) as total
+            FROM notificaciones
+            WHERE usuario_id = %s AND leido = FALSE
+        """, (session["usuario_id"],))
+        
+        result = cursor.fetchone()
+        count = result[0] if result else 0
+        
+        return jsonify({
+            "count": count,
+            "mensaje": f"Tienes {count} notificaciones sin leer" if count > 0 else "No tienes notificaciones",
+            "tipo": "info"
+        }), 200
+    
+    except Exception as e:
+        return jsonify({
+            "error": f"Error al obtener notificaciones: {str(e)}",
+            "tipo": "error"
+        }), 500
+    
+    finally:
+        cursor.close()
+        db.close()
+
+
+@app.route("/api/marcar_leida/<int:id>", methods=["POST"])
+@login_requerido
+def api_marcar_leida(id):
+    """Marcar notificación como leída vía AJAX"""
+    db = conexion()
+    cursor = db.cursor()
+    
+    try:
+        cursor.execute("""
+            UPDATE notificaciones 
+            SET leido = TRUE
+            WHERE id = %s AND usuario_id = %s
+        """, (id, session["usuario_id"]))
+        
+        db.commit()
+        
+        return jsonify({
+            "mensaje": "Notificación marcada como leída",
+            "tipo": "success",
+            "success": True
+        }), 200
+    
+    except Exception as e:
+        db.rollback()
+        return jsonify({
+            "error": f"Error: {str(e)}",
+            "tipo": "error",
+            "success": False
+        }), 500
     
     finally:
         cursor.close()
