@@ -504,7 +504,7 @@
         </div>
     </div>
 
-    <form method="POST" action="/guardar_formulario" id="multiStepForm">
+    <form method="POST" action="/guardar_formulario" id="multiStepForm" enctype="multipart/form-data">
 
         <!-- ================= INFORMACIÓN PERSONAL ================= -->
         <div class="section active" data-step="1">
@@ -518,64 +518,102 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Edad <span class="required-indicator">*</span></label>
-                    <input type="number" name="edad" placeholder="Ej: 22" min="18" max="99" required>
-                    <div class="field-error">Ingresa una edad válida.</div>
+                    <label>Foto del alumno <span class="required-indicator">*</span></label>
+                    <input type="file" name="foto_alumno" accept="image/*" required>
+                    <div class="field-error">Sube una foto tuya.</div>
                 </div>
             </div>
 
             <div class="form-row">
+                <div class="form-group">
+                    <label>Edad <span class="required-indicator">*</span></label>
+                    <input type="number" name="edad" placeholder="Ej: 22" min="18" max="99" required>
+                    <div class="field-error">Ingresa una edad válida.</div>
+                </div>
+
                 <div class="form-group">
                     <label>Carrera <span class="required-indicator">*</span></label>
                     <input type="text" name="carrera" placeholder="Ej: Ingeniería en Sistemas" required>
                     <div class="field-error">Este campo es obligatorio.</div>
                 </div>
+            </div>
 
+            <div class="form-row">
                 <div class="form-group">
                     <label>Nivel <span class="required-indicator">*</span></label>
                     <input type="text" name="nivel" placeholder="Ej: 8vo cuatrimestre" required>
                     <div class="field-error">Este campo es obligatorio.</div>
                 </div>
-            </div>
 
-            <div class="form-row">
                 <div class="form-group">
                     <label>Matrícula <span class="required-indicator">*</span></label>
                     <input type="text" name="matricula" placeholder="Ej: 202304105" required>
                     <div class="field-error">Este campo es obligatorio.</div>
                 </div>
+            </div>
 
+            <div class="form-row">
                 <div class="form-group">
                     <label>Número telefónico <span class="required-indicator">*</span></label>
                     <input type="text" name="telefono" placeholder="Ej: 7441234567" required>
+                    <div class="field-error">Este campo es obligatorio.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Dirección <span class="required-indicator">*</span></label>
+                    <input type="text" name="direccion" placeholder="Calle, número, colonia, ciudad" required>
                     <div class="field-error">Este campo es obligatorio.</div>
                 </div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>Asesor académico <span class="required-indicator">*</span></label>
-                    <input type="text" name="asesor" placeholder="Nombre del asesor" required>
+                    <label>Asesor académico 1 <span class="required-indicator">*</span></label>
+                    <input type="text" name="asesor_1" placeholder="Nombre del primer asesor" required>
                     <div class="field-error">Este campo es obligatorio.</div>
                 </div>
 
                 <div class="form-group">
-                    <label>Tutor <span class="required-indicator">*</span></label>
-                    <input type="text" name="tutor" placeholder="Nombre del tutor" required>
+                    <label>Asesor académico 2 <span class="required-indicator">*</span></label>
+                    <input type="text" name="asesor_2" placeholder="Nombre del segundo asesor" required>
                     <div class="field-error">Este campo es obligatorio.</div>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>Dirección <span class="required-indicator">*</span></label>
-                <input type="text" name="direccion" placeholder="Calle, número, colonia, ciudad" required>
-                <div class="field-error">Este campo es obligatorio.</div>
             </div>
 
             <div class="form-group">
                 <label>Número de integrantes en el equipo <span class="required-indicator">*</span></label>
                 <input type="number" name="integrantes" placeholder="Ej: 4" min="1" max="20" required>
                 <div class="field-error">Ingresa un numero valido.</div>
+            </div>
+
+            <!-- INTEGRANTE 1 -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre del integrante 1 <span class="required-indicator">*</span></label>
+                    <input type="text" name="integrante_1_nombre" placeholder="Ej: Carlos López" required>
+                    <div class="field-error">Este campo es obligatorio.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Foto del integrante 1 <span class="required-indicator">*</span></label>
+                    <input type="file" name="integrante_1_foto" accept="image/*" required>
+                    <div class="field-error">Sube una foto del integrante.</div>
+                </div>
+            </div>
+
+            <!-- INTEGRANTE 2 -->
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Nombre del integrante 2 <span class="required-indicator">*</span></label>
+                    <input type="text" name="integrante_2_nombre" placeholder="Ej: María González" required>
+                    <div class="field-error">Este campo es obligatorio.</div>
+                </div>
+
+                <div class="form-group">
+                    <label>Foto del integrante 2 <span class="required-indicator">*</span></label>
+                    <input type="file" name="integrante_2_foto" accept="image/*" required>
+                    <div class="field-error">Sube una foto del integrante.</div>
+                </div>
             </div>
         </div>
 

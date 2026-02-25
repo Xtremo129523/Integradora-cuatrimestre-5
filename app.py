@@ -12,6 +12,7 @@ from reportlab.pdfgen import canvas
 
 app = Flask(__name__)
 app.secret_key = "clave_super_secreta"
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 
 DB_HOST = "127.0.0.1"
 DB_USER = "root"
@@ -139,6 +140,16 @@ def validar_correo_institucional_en_sesion():
         if not es_correo_institucional(correo_sesion):
             flash("Debes usar un correo institucional para acceder al sistema.", "danger")
             return redirect(url_for("login"))
+
+
+# ================= SERVIR ARCHIVOS SUBIDOS =================
+@app.route("/uploads/<path:filepath>")
+def descargar_archivo(filepath):
+    """Servir archivos subidos (fotos)"""
+    try:
+        return send_file(filepath, mimetype='image/jpeg')
+    except:
+        return "Archivo no encontrado", 404
 
 
 # ================= LOGIN =================
@@ -623,6 +634,27 @@ def inicio():
 
 
 # ================= GUARDAR FORMULARIO =================
+
+def guardar_archivo(file, usuario_id, tipo="foto"):
+    """Guardar archivo subido y retornar la ruta relativa"""
+    if not file or file.filename == '':
+        return None
+    
+    # Crear carpeta de uploads si no existe
+    upload_dir = os.path.join("uploads", str(usuario_id))
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    # Generar nombre único para el archivo
+    ext = os.path.splitext(file.filename)[1]
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    filename = f"{tipo}_{timestamp}{ext}"
+    
+    filepath = os.path.join(upload_dir, filename)
+    file.save(filepath)
+    
+    return filepath
+
+
 @app.route("/guardar_formulario", methods=["POST"])
 @login_requerido
 def guardar_formulario():
@@ -636,6 +668,13 @@ def guardar_formulario():
     cursor = db.cursor()
 
     try:
+        usuario_id = session["usuario_id"]
+        
+        # Guardar archivos
+        foto_alumno = guardar_archivo(request.files.get('foto_alumno'), usuario_id, "alumno")
+        integrante_1_foto = guardar_archivo(request.files.get('integrante_1_foto'), usuario_id, "integrante_1")
+        integrante_2_foto = guardar_archivo(request.files.get('integrante_2_foto'), usuario_id, "integrante_2")
+        
         cursor.execute("""
             INSERT INTO solicitudes (
                 usuario_id,
@@ -644,11 +683,16 @@ def guardar_formulario():
                 carrera,
                 nivel,
                 matricula,
-                asesor_academico,
-                tutor,
+                asesor_academico_1,
+                asesor_academico_2,
                 telefono,
                 direccion,
                 numero_integrantes,
+                foto_alumno,
+                integrante_1_nombre,
+                integrante_1_foto,
+                integrante_2_nombre,
+                integrante_2_foto,
                 descripcion_proyecto,
                 ubicacion_emprendimiento,
                 fecha_inicio_emprendimiento,
@@ -672,22 +716,27 @@ def guardar_formulario():
             )
             VALUES (
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                %s,%s,%s,%s,%s,%s,%s,%s,
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                %s,'pendiente'
+                %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                %s,%s,%s,%s,%s,'pendiente'
             )
         """, (
-            session["usuario_id"],
+            usuario_id,
             request.form["nombre"],
             request.form["edad"],
             request.form["carrera"],
             request.form["nivel"],
             request.form["matricula"],
-            request.form["asesor"],
-            request.form["tutor"],
+            request.form["asesor_1"],
+            request.form["asesor_2"],
             request.form["telefono"],
             request.form["direccion"],
             request.form["integrantes"],
+            foto_alumno,
+            request.form["integrante_1_nombre"],
+            integrante_1_foto,
+            request.form["integrante_2_nombre"],
+            integrante_2_foto,
             request.form["descripcion"],
             request.form["ubicacion"],
             request.form["inicio_emprendimiento"],
