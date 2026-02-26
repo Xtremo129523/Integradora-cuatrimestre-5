@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <!-- Fondo circular azul marino (borde exterior) -->
+  <circle cx="100" cy="100" r="95" fill="#2C5282" stroke="#1a3a52" stroke-width="2"/>
+  
+  <!-- Círculo blanco interior -->
+  <circle cx="100" cy="100" r="75" fill="#ffffff"/>
+  
+  <!-- Elemento azul (onda/forma) -->
+  <path d="M 140 60 Q 160 80 155 110 Q 150 140 120 150 Q 110 155 105 155 L 105 85 Z" fill="#0099CC" opacity="0.9"/>
+  
+  <!-- Elemento verde (las "U" simbólicas) -->
+  <g fill="#009933">
+    <!-- Primera "U" -->
+    <path d="M 70 80 L 75 80 L 75 125 Q 75 135 65 135 Q 55 135 55 125 L 60 125 Q 60 130 65 130 Q 70 130 70 125 Z"/>
+    
+    <!-- Segunda "U" -->
+    <path d="M 85 70 L 90 70 L 90 125 Q 90 135 80 135 Q 70 135 70 125 L 75 125 Q 75 130 80 130 Q 85 130 85 125 Z"/>
+  </g>
+  
+  <!-- Texto "UTA" en blanco (alternativa con texto) -->
+  <text x="100" y="110" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="#003366" text-anchor="middle" dominant-baseline="middle">UTA</text>
+</svg>

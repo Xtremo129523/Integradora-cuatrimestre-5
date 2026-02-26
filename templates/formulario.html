@@ -12,11 +12,117 @@
         }
 
         body {
-            background: linear-gradient(135deg, #0f5a8a 0%, #0f3460 100%);
+            background: linear-gradient(135deg, #003366 0%, #001a33 100%);
             display: flex;
             justify-content: center;
-            padding: 40px 20px;
+            padding: 120px 20px 40px 20px;
             min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* ============ IMÁGENES ANIMADAS ============ */
+        .animated-images-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .animated-image {
+            position: absolute;
+            opacity: 0.08;
+            background-size: cover;
+            background-position: center;
+            animation: float 10s ease-in-out infinite;
+        }
+
+        .image-1 {
+            width: 400px;
+            height: 400px;
+            top: 10%;
+            left: 5%;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23ffffff" width="200" height="200"/><circle cx="50" cy="50" r="30" fill="%23009933" opacity="0.8"/><circle cx="150" cy="100" r="40" fill="%232C5282" opacity="0.7"/><path d="M100 150 L130 180 L70 180 Z" fill="%230099CC" opacity="0.8"/></svg>');
+            animation-delay: 0s;
+        }
+
+        .image-2 {
+            width: 350px;
+            height: 350px;
+            bottom: 10%;
+            right: 8%;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23ffffff" width="200" height="200"/><rect x="40" y="40" width="120" height="120" fill="%23009933" rx="20" opacity="0.7"/><circle cx="100" cy="100" r="35" fill="%230099CC" opacity="0.9"/><circle cx="100" cy="100" r="20" fill="%232C5282" opacity="0.8"/></svg>');
+            animation-delay: 1.5s;
+        }
+
+        .image-3 {
+            width: 300px;
+            height: 300px;
+            top: 50%;
+            left: 75%;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23ffffff" width="200" height="200"/><path d="M50 100 L100 50 L150 100 L100 150 Z" fill="%232C5282" opacity="0.7"/><path d="M70 100 L100 70 L130 100 L100 130 Z" fill="%23009933" opacity="0.8"/><path d="M85 100 L100 85 L115 100 L100 115 Z" fill="%230099CC" opacity="0.9"/></svg>');
+            animation-delay: 2.5s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-40px) rotate(8deg); }
+        }
+
+        /* HEADER CON LOGO UTA */
+        .uta-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, rgba(0, 51, 102, 0.98) 0%, rgba(0, 26, 51, 0.98) 100%);
+            backdrop-filter: blur(20px);
+            padding: 12px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        }
+
+        .uta-logo-text {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        .uta-logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #003366;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
         .form-header {
@@ -65,8 +171,8 @@
         }
 
         .progress-step.active .progress-step-circle {
-            background: #0f5a8a;
-            border-color: #0f5a8a;
+            background: #0066CC;
+            border-color: #0066CC;
             color: white;
             transform: scale(1.1);
         }
@@ -84,7 +190,7 @@
         }
 
         .progress-step.active .progress-step-label {
-            color: #0f5a8a;
+            color: #0066CC;
         }
 
         .progress-bar {
@@ -96,7 +202,7 @@
 
         .progress-bar-fill {
             height: 100%;
-            background: linear-gradient(90deg, #0f5a8a 0%, #0f3460 100%);
+            background: linear-gradient(90deg, #0066CC 0%, #0052A3 100%);
             transition: width 0.4s ease;
             width: 0%;
         }
@@ -104,11 +210,14 @@
         .form-card {
             background-color: #ffffff;
             padding: 50px 40px;
-            border-radius: 20px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            border-radius: 25px;
+            box-shadow: 0 25px 80px rgba(0, 102, 204, 0.12), 0 10px 30px rgba(0, 0, 0, 0.1);
             width: 100%;
             max-width: 1000px;
             animation: fadeIn 0.5s ease-in;
+            border: 1px solid rgba(0, 102, 204, 0.1);
+            position: relative;
+            z-index: 10;
         }
 
         @keyframes fadeIn {
@@ -119,7 +228,7 @@
         h1 {
             text-align: center;
             margin-bottom: 15px;
-            color: #0f5a8a;
+            color: #003366;
             font-size: 2.5em;
             font-weight: 700;
             letter-spacing: -1px;
@@ -133,14 +242,15 @@
         }
 
         .section {
-            background: linear-gradient(145deg, #f8f9ff 0%, #ffffff 100%);
-            padding: 30px;
-            border-radius: 15px;
+            background: linear-gradient(145deg, #f0f6ff 0%, #ffffff 100%);
+            padding: 35px;
+            border-radius: 18px;
             margin-bottom: 30px;
-            border-left: 5px solid #0f5a8a;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            border-left: 6px solid #0066CC;
+            box-shadow: 0 8px 24px rgba(0, 102, 204, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04);
             transition: opacity 0.3s ease, transform 0.3s ease;
-            display: none; /* Ocultar por defecto */
+            display: none;
+            border: 1px solid rgba(0, 102, 204, 0.1);
         }
 
         .section.active {
@@ -162,8 +272,8 @@
         h2 {
             margin-bottom: 25px;
             padding-bottom: 15px;
-            border-bottom: 3px solid #0f5a8a;
-            color: #0f5a8a;
+            border-bottom: 3px solid #0066CC;
+            color: #003366;
             font-size: 1.6em;
             display: flex;
             align-items: center;
@@ -171,7 +281,7 @@
         }
 
         .section-number {
-            background: linear-gradient(135deg, #0f5a8a, #0f3460);
+            background: linear-gradient(135deg, #0066CC, #0052A3);
             color: white;
             width: 40px;
             height: 40px;
@@ -194,19 +304,114 @@
             margin-bottom: 20px;
         }
 
-        .image-preview {
-            margin-top: 10px;
+        /* ESTILOS PARA INPUT FILE */
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-label {
             display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 20px 25px;
+            background: linear-gradient(135deg, #e8f2ff 0%, #d4e7ff 100%);
+            border: 3px dashed #0066CC;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            font-weight: 600;
+            color: #0066CC;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-label:hover {
+            background: linear-gradient(135deg, #d4e7ff 0%, #bbdefb 100%);
+            border-color: #003366;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 102, 204, 0.15);
+        }
+
+        .file-input-label::before {
+            content: "📷";
+            font-size: 2em;
+            filter: grayscale(0%);
+        }
+
+        .file-input-label.has-file {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border-color: #43a047;
+            color: #2e7d32;
+        }
+
+        .file-input-label.has-file::before {
+            content: "✓";
+            font-size: 2em;
+        }
+
+        .file-input-label .file-name {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+            font-weight: normal;
+        }
+
+        .image-preview {
+            margin-top: 15px;
+            display: flex;
+            justify-content: center;
             align-items: center;
             gap: 10px;
         }
 
         .image-preview img {
-            width: 80px;
-            height: 80px;
+            width: 120px;
+            height: 120px;
             object-fit: cover;
-            border-radius: 10px;
-            border: 2px solid rgba(15, 90, 138, 0.25);
+            border-radius: 15px;
+            border: 4px solid #0066CC;
+            box-shadow: 0 8px 20px rgba(0, 102, 204, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .image-preview img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 28px rgba(0, 102, 204, 0.3);
+        }
+
+        /* GRUPOS DE INTEGRANTES */
+        .integrante-group {
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 15px;
+            background: linear-gradient(145deg, #f0f6ff 0%, #ffffff 100%);
+            border: 2px solid rgba(0, 102, 204, 0.15);
+            transition: all 0.3s ease;
+            animation: fadeInDown 0.4s ease-in-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .integrante-group:hover {
+            box-shadow: 0 8px 20px rgba(0, 102, 204, 0.1);
+            border-color: rgba(0, 102, 204, 0.3);
         }
 
         .form-group.invalid input,
@@ -238,7 +443,7 @@
 
         label::before {
             content: "●";
-            color: #0f5a8a;
+            color: #0066CC;
             margin-right: 8px;
             font-size: 0.8em;
         }
@@ -249,20 +454,22 @@
         select,
         textarea {
             width: 100%;
-            padding: 14px 16px;
+            padding: 14px 18px;
             border: 2px solid #e0e0e0;
-            border-radius: 10px;
+            border-radius: 12px;
             outline: none;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-size: 1em;
             background-color: #ffffff;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.03);
         }
 
         input:focus,
         textarea:focus,
         select:focus {
-            border-color: #0f5a8a;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            border-color: #0066CC;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.08), 0 4px 12px rgba(0, 102, 204, 0.15);
             transform: translateY(-2px);
         }
 
@@ -280,7 +487,7 @@
 
         button {
             padding: 18px 40px;
-            background: linear-gradient(135deg, #0f5a8a 0%, #0f3460 100%);
+            background: linear-gradient(135deg, #0066CC 0%, #0052A3 100%);
             color: white;
             font-size: 1.1em;
             font-weight: bold;
@@ -288,12 +495,12 @@
             border-radius: 12px;
             cursor: pointer;
             transition: all 0.3s ease;
-            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 10px 25px rgba(0, 102, 204, 0.3);
         }
 
         button:hover {
             transform: translateY(-3px);
-            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 15px 35px rgba(0, 102, 204, 0.4);
         }
 
         button:active {
@@ -328,25 +535,25 @@
 
         .btn-prev {
             background: #fff;
-            color: #0f5a8a;
-            border: 2px solid #0f5a8a;
+            color: #003366;
+            border: 2px solid #003366;
         }
 
         .btn-prev:hover {
-            background: #0f5a8a;
+            background: #003366;
             color: white;
             transform: translateY(-2px);
         }
 
         .btn-next, .btn-submit {
-            background: linear-gradient(135deg, #0f5a8a 0%, #0f3460 100%);
+            background: linear-gradient(135deg, #0066CC 0%, #0052A3 100%);
             color: white;
-            box-shadow: 0 8px 20px rgba(15, 90, 138, 0.3);
+            box-shadow: 0 8px 20px rgba(0, 102, 204, 0.3);
         }
 
         .btn-next:hover, .btn-submit:hover {
             transform: translateY(-3px);
-            box-shadow: 0 12px 28px rgba(15, 90, 138, 0.4);
+            box-shadow: 0 12px 28px rgba(0, 102, 204, 0.4);
         }
 
         .btn-submit {
@@ -380,12 +587,12 @@
 
         .logout-link {
             background-color: #fff;
-            color: #0f5a8a;
-            border: 2px solid #0f5a8a;
+            color: #003366;
+            border: 2px solid #003366;
         }
 
         .logout-link:hover {
-            background-color: #0f5a8a;
+            background-color: #003366;
             color: white;
             transform: translateY(-2px);
         }
@@ -494,9 +701,24 @@
 </head>
 <body>
 
+<!-- HEADER CON LOGO DE UTA -->
+<div class="uta-header">
+    <a href="#" class="uta-logo-text">
+        <img src="{{ url_for('static', filename='logotipo de l aUTA.jpg') }}" alt="Logo UTA" class="uta-logo-img" style="width: 45px; height: 45px; border-radius: 50%; object-fit: contain; background: white; padding: 3px;">
+        <span>UTA - Sistema de Emprendedores</span>
+    </a>
+</div>
+
+<!-- Imágenes animadas -->
+<div class="animated-images-container">
+    <div class="animated-image image-1"></div>
+    <div class="animated-image image-2"></div>
+    <div class="animated-image image-3"></div>
+</div>
+
 <div class="form-card">
     <div class="form-header">
-        <h1>🚀 Formulario de Emprendedores</h1>
+        <h1>Formulario de Emprendedores</h1>
         <p class="subtitle">Completa tu información para participar en el programa de incubación</p>
     </div>
 
@@ -529,102 +751,137 @@
 
             <div class="form-group">
                 <label>Número de integrantes en el equipo (max 5)</label>
-                <input type="number" name="integrantes" placeholder="Ej: 2" min="0" max="5">
+                <input type="number" id="num_integrantes" name="integrantes" placeholder="Ej: 2" min="0" max="5">
             </div>
 
             <!-- INTEGRANTE 1 -->
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre del integrante 1 (opcional)</label>
-                    <input type="text" name="integrante_1_nombre" placeholder="Ej: Carlos Lopez">
+            <div class="integrante-group" id="integrante_1_group" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre del integrante 1 (opcional)</label>
+                        <input type="text" name="integrante_1_nombre" placeholder="Ej: Carlos Lopez">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Foto del integrante 1 (opcional)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" name="integrante_1_foto" id="integrante_1_foto" accept="image/*">
+                            <label for="integrante_1_foto" class="file-input-label" id="label_integrante_1_foto">
+                                <span>Seleccionar foto del integrante</span>
+                            </label>
+                        </div>
+                        <div class="image-preview" id="preview_integrante_1_foto"></div>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Foto del integrante 1 (opcional)</label>
-                    <input type="file" name="integrante_1_foto" accept="image/*">
-                    <div class="image-preview" id="preview_integrante_1_foto"></div>
+                    <label>Descripcion breve del integrante 1 (opcional)</label>
+                    <textarea name="integrante_1_descripcion" placeholder="Ej: Encargado de diseno y presentacion" maxlength="150"></textarea>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>Descripcion breve del integrante 1 (opcional)</label>
-                <textarea name="integrante_1_descripcion" placeholder="Ej: Encargado de diseno y presentacion" maxlength="150"></textarea>
             </div>
 
             <!-- INTEGRANTE 2 -->
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre del integrante 2 (opcional)</label>
-                    <input type="text" name="integrante_2_nombre" placeholder="Ej: Maria Gonzalez">
+            <div class="integrante-group" id="integrante_2_group" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre del integrante 2 (opcional)</label>
+                        <input type="text" name="integrante_2_nombre" placeholder="Ej: Maria Gonzalez">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Foto del integrante 2 (opcional)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" name="integrante_2_foto" id="integrante_2_foto" accept="image/*">
+                            <label for="integrante_2_foto" class="file-input-label" id="label_integrante_2_foto">
+                                <span>Seleccionar foto del integrante</span>
+                            </label>
+                        </div>
+                        <div class="image-preview" id="preview_integrante_2_foto"></div>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Foto del integrante 2 (opcional)</label>
-                    <input type="file" name="integrante_2_foto" accept="image/*">
-                    <div class="image-preview" id="preview_integrante_2_foto"></div>
+                    <label>Descripcion breve del integrante 2 (opcional)</label>
+                    <textarea name="integrante_2_descripcion" placeholder="Ej: Apoyo en marketing y ventas" maxlength="150"></textarea>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>Descripcion breve del integrante 2 (opcional)</label>
-                <textarea name="integrante_2_descripcion" placeholder="Ej: Apoyo en marketing y ventas" maxlength="150"></textarea>
             </div>
 
             <!-- INTEGRANTE 3 -->
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre del integrante 3 (opcional)</label>
-                    <input type="text" name="integrante_3_nombre" placeholder="Ej: Luis Perez">
+            <div class="integrante-group" id="integrante_3_group" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre del integrante 3 (opcional)</label>
+                        <input type="text" name="integrante_3_nombre" placeholder="Ej: Luis Perez">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Foto del integrante 3 (opcional)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" name="integrante_3_foto" id="integrante_3_foto" accept="image/*">
+                            <label for="integrante_3_foto" class="file-input-label" id="label_integrante_3_foto">
+                                <span>Seleccionar foto del integrante</span>
+                            </label>
+                        </div>
+                        <div class="image-preview" id="preview_integrante_3_foto"></div>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Foto del integrante 3 (opcional)</label>
-                    <input type="file" name="integrante_3_foto" accept="image/*">
-                    <div class="image-preview" id="preview_integrante_3_foto"></div>
+                    <label>Descripcion breve del integrante 3 (opcional)</label>
+                    <textarea name="integrante_3_descripcion" placeholder="Ej: Apoyo en investigacion" maxlength="150"></textarea>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>Descripcion breve del integrante 3 (opcional)</label>
-                <textarea name="integrante_3_descripcion" placeholder="Ej: Apoyo en investigacion" maxlength="150"></textarea>
             </div>
 
             <!-- INTEGRANTE 4 -->
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre del integrante 4 (opcional)</label>
-                    <input type="text" name="integrante_4_nombre" placeholder="Ej: Ana Ruiz">
+            <div class="integrante-group" id="integrante_4_group" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre del integrante 4 (opcional)</label>
+                        <input type="text" name="integrante_4_nombre" placeholder="Ej: Ana Ruiz">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Foto del integrante 4 (opcional)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" name="integrante_4_foto" id="integrante_4_foto" accept="image/*">
+                            <label for="integrante_4_foto" class="file-input-label" id="label_integrante_4_foto">
+                                <span>Seleccionar foto del integrante</span>
+                            </label>
+                        </div>
+                        <div class="image-preview" id="preview_integrante_4_foto"></div>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Foto del integrante 4 (opcional)</label>
-                    <input type="file" name="integrante_4_foto" accept="image/*">
-                    <div class="image-preview" id="preview_integrante_4_foto"></div>
+                    <label>Descripcion breve del integrante 4 (opcional)</label>
+                    <textarea name="integrante_4_descripcion" placeholder="Ej: Apoyo en finanzas" maxlength="150"></textarea>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>Descripcion breve del integrante 4 (opcional)</label>
-                <textarea name="integrante_4_descripcion" placeholder="Ej: Apoyo en finanzas" maxlength="150"></textarea>
             </div>
 
             <!-- INTEGRANTE 5 -->
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Nombre del integrante 5 (opcional)</label>
-                    <input type="text" name="integrante_5_nombre" placeholder="Ej: Diego Cruz">
+            <div class="integrante-group" id="integrante_5_group" style="display: none;">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre del integrante 5 (opcional)</label>
+                        <input type="text" name="integrante_5_nombre" placeholder="Ej: Diego Cruz">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Foto del integrante 5 (opcional)</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" name="integrante_5_foto" id="integrante_5_foto" accept="image/*">
+                            <label for="integrante_5_foto" class="file-input-label" id="label_integrante_5_foto">
+                                <span>Seleccionar foto del integrante</span>
+                            </label>
+                        </div>
+                        <div class="image-preview" id="preview_integrante_5_foto"></div>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label>Foto del integrante 5 (opcional)</label>
-                    <input type="file" name="integrante_5_foto" accept="image/*">
-                    <div class="image-preview" id="preview_integrante_5_foto"></div>
+                    <label>Descripcion breve del integrante 5 (opcional)</label>
+                    <textarea name="integrante_5_descripcion" placeholder="Ej: Apoyo en ventas" maxlength="150"></textarea>
                 </div>
-            </div>
-
-            <div class="form-group">
-                <label>Descripcion breve del integrante 5 (opcional)</label>
-                <textarea name="integrante_5_descripcion" placeholder="Ej: Apoyo en ventas" maxlength="150"></textarea>
             </div>
         </div>
 
@@ -696,22 +953,8 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>¿Dado de alta ante el SAT? <span class="required-indicator">*</span></label>
-                    <input type="text" name="sat" placeholder="Sí / No" required>
-                    <div class="field-error">Este campo es obligatorio.</div>
-                </div>
-
-                <div class="form-group">
                     <label>Personas que trabajan en el proyecto <span class="required-indicator">*</span></label>
                     <input type="number" name="trabajadores" placeholder="Ej: 3" min="1" required>
-                    <div class="field-error">Ingresa un numero valido.</div>
-                </div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group">
-                    <label>Miembros del equipo en programa de incubación <span class="required-indicator">*</span></label>
-                    <input type="number" name="incubacion" placeholder="Ej: 2" min="0" required>
                     <div class="field-error">Ingresa un numero valido.</div>
                 </div>
 
@@ -736,7 +979,12 @@
 
                 <div class="form-group">
                     <label>Foto del alumno <span class="required-indicator">*</span></label>
-                    <input type="file" name="foto_alumno" accept="image/*" required>
+                    <div class="file-input-wrapper">
+                        <input type="file" name="foto_alumno" id="foto_alumno" accept="image/*" required>
+                        <label for="foto_alumno" class="file-input-label" id="label_foto_alumno">
+                            <span>Seleccionar foto del líder</span>
+                        </label>
+                    </div>
                     <div class="field-error">Sube una foto tuya.</div>
                     <div class="image-preview" id="preview_foto_alumno"></div>
                 </div>
@@ -757,7 +1005,14 @@
 
                 <div class="form-group">
                     <label>Carrera <span class="required-indicator">*</span></label>
-                    <input type="text" name="carrera" placeholder="Ej: Ingeniería en Sistemas" required>
+                    <select name="carrera" required>
+                        <option value="">-- Selecciona tu carrera --</option>
+                        <option value="Ingeniería en Desarrollo y Innovación Empresarial">Ingeniería en Desarrollo y Innovación Empresarial</option>
+                        <option value="Ingeniería en Operaciones Industriales">Ingeniería en Operaciones Industriales</option>
+                        <option value="Técnico Superior Universitario en Tecnologías de la Información">Técnico Superior Universitario en Tecnologías de la Información</option>
+                        <option value="Técnico Superior Universitario en Procesos Alimentarios">Técnico Superior Universitario en Procesos Alimentarios</option>
+                        <option value="Técnico Superior Universitario en Desarrollo de Software Multiplataforma">Técnico Superior Universitario en Desarrollo de Software Multiplataforma</option>
+                    </select>
                     <div class="field-error">Este campo es obligatorio.</div>
                 </div>
             </div>
@@ -1080,12 +1335,29 @@
         if (!container) return;
         const url = URL.createObjectURL(file);
         container.innerHTML = `<img src="${url}" alt="Previsualizacion">`;
+        
+        // Actualizar el label del archivo
+        const labelId = `label_${input.name}`;
+        const label = document.getElementById(labelId);
+        if (label) {
+            label.classList.add('has-file');
+            const fileName = file.name.length > 25 ? file.name.substring(0, 25) + '...' : file.name;
+            label.innerHTML = `<span>Archivo seleccionado</span><div class="file-name">${fileName}</div>`;
+        }
     }
 
     function clearPreview(input) {
         const container = getPreviewContainer(input);
         if (!container) return;
         container.innerHTML = '';
+        
+        // Restaurar el label original
+        const labelId = `label_${input.name}`;
+        const label = document.getElementById(labelId);
+        if (label) {
+            label.classList.remove('has-file');
+            label.innerHTML = '<span>Seleccionar foto</span>';
+        }
     }
 
     IMAGE_INPUTS.forEach((name) => {
@@ -1094,6 +1366,32 @@
             input.addEventListener('change', () => handleImageInput(input));
         }
     });
+
+    // ================= MOSTRAR/OCULTAR INTEGRANTES DINAMICAMENTE =================
+    const numIntegrantesInput = document.getElementById('num_integrantes');
+    
+    function updateIntegrantesVisibility() {
+        const num = parseInt(numIntegrantesInput.value) || 0;
+        
+        // Ocultar todos primero
+        for (let i = 1; i <= 5; i++) {
+            const group = document.getElementById(`integrante_${i}_group`);
+            if (group) {
+                if (i <= num) {
+                    group.style.display = 'block';
+                } else {
+                    group.style.display = 'none';
+                }
+            }
+        }
+    }
+
+    if (numIntegrantesInput) {
+        numIntegrantesInput.addEventListener('input', updateIntegrantesVisibility);
+        numIntegrantesInput.addEventListener('change', updateIntegrantesVisibility);
+        // Inicializar visibilidad al cargar
+        updateIntegrantesVisibility();
+    }
 
     // Inicializar
     showStep(1);

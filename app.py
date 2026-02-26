@@ -10,6 +10,10 @@ from email.message import EmailMessage
 import io
 from reportlab.pdfgen import canvas
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
+
+# Cargar variables de entorno desde .env
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = "clave_super_secreta"
@@ -31,8 +35,8 @@ INSTITUTION_DOMAIN = "@utacapulco.edu.mx"
 
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
-SMTP_USER = os.getenv("SMTP_USER", "")
-SMTP_PASS = os.getenv("SMTP_PASS", "")
+SMTP_USER = os.getenv("SMTP_USER", "").strip()
+SMTP_PASS = os.getenv("SMTP_PASS", "").strip()
 
 def es_correo_institucional(correo):
     return bool(correo) and correo.lower().endswith(INSTITUTION_DOMAIN)
@@ -46,24 +50,74 @@ def smtp_configurado():
     return bool(SMTP_USER and SMTP_PASS)
 
 
-def enviar_correo(destinatario, asunto, cuerpo):
+def enviar_correo(destinatario, asunto, cuerpo, html=False):
+    """
+    Envía un correo electrónico usando SMTP de Gmail
+    
+    Args:
+        destinatario: Email del destinatario
+        asunto: Asunto del correo
+        cuerpo: Cuerpo del correo
+        html: Si True, envía como HTML
+    
+    Returns:
+        tupla (éxito: bool, mensaje: str)
+    """
+    
     if not smtp_configurado():
-        return False, "SMTP no configurado"
-
-    mensaje = EmailMessage()
-    mensaje["Subject"] = asunto
-    mensaje["From"] = f"Sistema Emprendedores <{SMTP_USER}>"
-    mensaje["To"] = destinatario
-    mensaje.set_content(cuerpo)
+        error = "❌ SMTP no configurado. Por favor, establecer SMTP_USER y SMTP_PASS en el archivo .env"
+        print(f"Error de correo: {error}")
+        return False, error
+    
+    if not destinatario or '@' not in destinatario:
+        error = "❌ Dirección de correo inválida"
+        print(f"Error de correo: {error}")
+        return False, error
 
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as smtp:
+        # Crear mensaje
+        mensaje = EmailMessage()
+        mensaje["Subject"] = asunto
+        mensaje["From"] = f"Sistema Emprendedores <{SMTP_USER}>"
+        mensaje["To"] = destinatario
+        
+        # Agregar contenido
+        if html:
+            mensaje.add_alternative(cuerpo, subtype='html')
+        else:
+            mensaje.set_content(cuerpo)
+        
+        # Enviar email
+        print(f"📧 Intentando enviar correo a: {destinatario}")
+        print(f"   Asunto: {asunto}")
+        
+        with smtplib.SMTP(SMTP_HOST, SMTP_PORT, timeout=10) as smtp:
             smtp.starttls()
             smtp.login(SMTP_USER, SMTP_PASS)
             smtp.send_message(mensaje)
-        return True, None
-    except Exception as exc:
-        return False, str(exc)
+        
+        print(f"✅ Correo enviado exitosamente a: {destinatario}")
+        return True, "Correo enviado exitosamente"
+        
+    except smtplib.SMTPAuthenticationError:
+        error = "❌ Error de autenticación SMTP. Verifica SMTP_USER y SMTP_PASS en .env"
+        print(f"Error de correo: {error}")
+        return False, error
+        
+    except smtplib.SMTPException as e:
+        error = f"❌ Error SMTP: {str(e)}"
+        print(f"Error de correo: {error}")
+        return False, error
+        
+    except TimeoutError:
+        error = "❌ Timeout al conectar con servidor SMTP"
+        print(f"Error de correo: {error}")
+        return False, error
+        
+    except Exception as e:
+        error = f"❌ Error al enviar correo: {str(e)}"
+        print(f"Error de correo: {error}")
+        return False, error
 
 
 # ================= VALIDACIÓN DE ARCHIVOS =================
@@ -396,30 +450,59 @@ def registro():
             VALUES (%s, %s, 'alumno', 'pendiente', 0, %s, %s)
         """, (correo, password, codigo, expira))
 
-        asunto = "Codigo de verificacion"
-        cuerpo = (
-            "Hola,\n\n"
-            "Tu codigo de verificacion es: " + codigo + "\n\n"
-            "Este codigo expira en 15 minutos.\n\n"
-            "Sistema de Gestion de Emprendedores"
-        )
+        asunto = "🔐 Código de Verificación - Sistema de Emprendedores"
+        cuerpo_html = f"""
+        <html>
+            <body style="font-family: 'Poppins', Arial, sans-serif; line-height: 1.6; color: #333;">
+                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <div style="background: linear-gradient(135deg, #0f5a8a 0%, #0f3460 100%); padding: 20px; border-radius: 10px; color: white; text-align: center;">
+                        <h1 style="margin: 0;">Sistema de Emprendedores</h1>
+                    </div>
+                    
+                    <div style="background: #f9f9f9; padding: 20px; margin-top: 20px; border-radius: 5px;">
+                        <h2>¡Bienvenido!</h2>
+                        <p>Para completar tu registro en el Sistema de Gestión de Emprendedores, necesitas verificar tu correo electrónico.</p>
+                        
+                        <div style="background: white; padding: 20px; border-left: 4px solid #0f5a8a; margin: 20px 0;">
+                            <p style="margin: 0 0 10px 0; color: #666;">Tu código de verificación es:</p>
+                            <h1 style="margin: 0; font-size: 36px; letter-spacing: 5px; color: #0f5a8a; text-align: center;">{codigo}</h1>
+                        </div>
+                        
+                        <div style="background: #fff3cd; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                            <p style="margin: 0; color: #856404;">
+                                ⏱️ <strong>Este código expira en 15 minutos.</strong><br>
+                                Si no solicitaste este registro, ignora este correo.
+                            </p>
+                        </div>
+                        
+                        <p style="margin-top: 20px; color: #666; font-size: 12px;">
+                            Este es un mensaje automático. Por favor no respondas a este correo.
+                        </p>
+                    </div>
+                    
+                    <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+                        <p>© 2026 Sistema de Gestion de Emprendedores - Universidad Tecnológica de Acapulco</p>
+                    </div>
+                </div>
+            </body>
+        </html>
+        """
 
-        enviado, error_envio = enviar_correo(correo, asunto, cuerpo)
+        enviado, error_envio = enviar_correo(correo, asunto, cuerpo_html, html=True)
         if not enviado:
             db.rollback()
             cursor.close()
             db.close()
-            return render_template(
-                "registro.html",
-                error="No se pudo enviar el correo de verificacion. Intenta mas tarde."
-            )
+            flash(f"Error al enviar correo: {error_envio}", "danger")
+            return render_template("registro.html", correo=correo)
 
         db.commit()
         cursor.close()
         db.close()
 
-        flash("Se envio un codigo de verificacion a tu correo.", "success")
+        flash("✅ Se envió un código de verificación a tu correo. Revisa tu bandeja de entrada.", "success")
         return redirect(url_for("verificar_correo", correo=correo))
+
 
     return render_template("registro.html")
 
@@ -787,22 +870,35 @@ def guardar_formulario():
     cursor = db.cursor()
 
     try:
-        usuario_id = session["usuario_id"]
+        # Obtener usuario_id de sesión con mejor manejo de error
+        usuario_id = session.get("usuario_id")
+        if not usuario_id:
+            flash("❌ Error: No se encontró tu ID de usuario. Por favor, inicia sesión de nuevo.", "danger")
+            cursor.close()
+            db.close()
+            return redirect(url_for("login"))
 
         numero_integrantes = request.form.get("integrantes")
         if numero_integrantes:
             try:
-                if int(numero_integrantes) > 5:
-                    flash("El maximo de integrantes permitidos es 5.", "danger")
+                num_int = int(numero_integrantes)
+                if num_int > 5:
+                    flash("❌ El máximo de integrantes permitidos es 5.", "danger")
+                    cursor.close()
+                    db.close()
                     return redirect(url_for("inicio"))
             except ValueError:
-                flash("El numero de integrantes no es valido.", "danger")
+                flash("❌ El número de integrantes debe ser un número válido.", "danger")
+                cursor.close()
+                db.close()
                 return redirect(url_for("inicio"))
         
         # Guardar archivos con validación
         foto_alumno, msg1 = guardar_archivo(request.files.get('foto_alumno'), usuario_id, "alumno")
         if not foto_alumno and request.files.get('foto_alumno'):
             flash(f"Error en foto principal: {msg1}", "danger")
+            cursor.close()
+            db.close()
             return redirect(url_for("inicio"))
             
         integrante_1_foto, _ = guardar_archivo(request.files.get('integrante_1_foto'), usuario_id, "integrante_1")
@@ -851,9 +947,7 @@ def guardar_formulario():
                 creacion_valor,
                 idea_7_palabras,
                 nombre_proyecto,
-                alta_sat,
                 personas_trabajando,
-                miembros_incubacion,
                 convocatorias_previas,
                 descripcion_lider,
                 rol_emprendimiento,
@@ -867,7 +961,7 @@ def guardar_formulario():
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                %s,%s,%s,%s,%s,'pendiente'
+                %s,%s,%s,'pendiente'
             )
         """, (
             usuario_id,
@@ -908,9 +1002,7 @@ def guardar_formulario():
             request.form.get("valor"),
             request.form.get("idea7"),
             request.form.get("nombre_proyecto"),
-            request.form.get("sat"),
             request.form.get("trabajadores"),
-            request.form.get("incubacion"),
             request.form.get("convocatoria"),
             request.form.get("lider_descripcion"),
             request.form.get("rol"),
@@ -979,6 +1071,7 @@ def descargar_documento(id):
 
     # Generar PDF
     buffer = io.BytesIO()
+
     pdf = canvas.Canvas(buffer)
     
     # Título

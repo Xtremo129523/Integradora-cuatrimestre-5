@@ -388,15 +388,126 @@
             25% { transform: translateX(-5px); }
             75% { transform: translateX(5px); }
         }
+
+        /* ============ IMÁGENES ANIMADAS ============ */
+        .animated-images-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .animated-image {
+            position: absolute;
+            opacity: 0.15;
+            background-size: cover;
+            background-position: center;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .image-1 {
+            width: 300px;
+            height: 300px;
+            top: -50px;
+            left: -100px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23ffffff" width="200" height="200"/><circle cx="50" cy="50" r="30" fill="%23009933" opacity="0.8"/><circle cx="150" cy="100" r="40" fill="%232C5282" opacity="0.7"/><path d="M100 150 L130 180 L70 180 Z" fill="%230099CC" opacity="0.8"/></svg>');
+            animation-delay: 0s;
+        }
+
+        .image-2 {
+            width: 250px;
+            height: 250px;
+            bottom: -30px;
+            right: -50px;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23ffffff" width="200" height="200"/><rect x="40" y="40" width="120" height="120" fill="%23009933" rx="20" opacity="0.7"/><circle cx="100" cy="100" r="35" fill="%230099CC" opacity="0.9"/><circle cx="100" cy="100" r="20" fill="%232C5282" opacity="0.8"/></svg>');
+            animation-delay: 1s;
+        }
+
+        .image-3 {
+            width: 200px;
+            height: 200px;
+            top: 30%;
+            right: 5%;
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200"><rect fill="%23ffffff" width="200" height="200"/><path d="M50 100 L100 50 L150 100 L100 150 Z" fill="%232C5282" opacity="0.7"/><path d="M70 100 L100 70 L130 100 L100 130 Z" fill="%23009933" opacity="0.8"/><path d="M85 100 L100 85 L115 100 L100 115 Z" fill="%230099CC" opacity="0.9"/></svg>');
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-30px) rotate(5deg); }
+        }
+
+        /* HEADER CON LOGO UTA */
+        .uta-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(135deg, rgba(15, 90, 138, 0.95) 0%, rgba(15, 52, 96, 0.95) 100%);
+            backdrop-filter: blur(20px);
+            padding: 12px 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .uta-logo-text {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 16px;
+            animation: slideIn 0.6s ease-out;
+        }
+
+        .uta-logo-icon {
+            width: 45px;
+            height: 45px;
+            background: linear-gradient(135deg, #ffffff 0%, #e0e0e0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #0f5a8a;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            padding-top: 70px;
+        }
     </style>
     <!-- Sistema de alertas y validaciones -->
     <script src="{{ url_for('static', filename='alerts.js') }}"></script>
 </head>
 <body>
+    <!-- HEADER CON LOGO DE UTA -->
+    <div class="uta-header">
+        <a href="#" class="uta-logo-text">
+            <img src="{{ url_for('static', filename='logotipo de l aUTA.jpg') }}" alt="Logo UTA" class="uta-logo-img" style="width: 45px; height: 45px; border-radius: 50%; object-fit: contain; background: white; padding: 3px;">
+            <span>UTA - Sistema de Emprendedores</span>
+        </a>
+    </div>
+
     <!-- Círculos decorativos -->
     <div class="circle circle1"></div>
     <div class="circle circle2"></div>
     <div class="circle circle3"></div>
+
+    <!-- Imágenes animadas -->
+    <div class="animated-images-container">
+        <div class="animated-image image-1"></div>
+        <div class="animated-image image-2"></div>
+        <div class="animated-image image-3"></div>
+    </div>
 
     <div class="login-container">
         <div class="login-header">
