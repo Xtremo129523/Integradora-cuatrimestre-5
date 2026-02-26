@@ -1,7 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, send_file, jsonify, abort
 import re
 import os
-import random
 import smtplib
 import mysql.connector
 from datetime import datetime, timedelta
@@ -43,10 +42,6 @@ SMTP_PASS = os.getenv("SMTP_PASS", "").replace(" ", "").strip()  # Remover espac
 
 def es_correo_institucional(correo):
     return bool(correo) and correo.lower().endswith(INSTITUTION_DOMAIN)
-
-
-def generar_codigo_verificacion():
-    return "".join(random.choice("0123456789") for _ in range(6))
 
 
 def smtp_configurado():
@@ -240,8 +235,6 @@ def validar_correo_institucional_en_sesion():
     rutas_permitidas = {
         "login",
         "registro",
-        "verificar_correo",
-        "reenviar_codigo",
         "static",
     }
 
@@ -314,9 +307,30 @@ def handle_exception(e):
 def descargar_archivo(filepath):
     """Servir archivos subidos (fotos)"""
     try:
-        return send_file(filepath, mimetype='image/jpeg')
-    except:
-        return "Archivo no encontrado", 404
+        print(f"[DEBUG] Intentando servir archivo: {filepath}")
+        
+        # Normalizar las barras invertidas a barras normales
+        filepath = filepath.replace('\\', '/')
+        
+        # Si filepath no comienza con 'uploads/', agregarlo
+        if not filepath.startswith('uploads/'):
+            filepath = f"uploads/{filepath}"
+        
+        # Construir ruta absoluta desde el directorio del proyecto
+        filepath_absoluto = os.path.join(app.root_path, filepath)
+        
+        print(f"[DEBUG] Ruta absoluta: {filepath_absoluto}")
+        
+        # Verificar que el archivo existe
+        if not os.path.exists(filepath_absoluto):
+            print(f"[DEBUG] Archivo no encontrado: {filepath_absoluto}")
+            # Retornar una imagen placeholder o error 404
+            return "Archivo no encontrado", 404
+            
+        return send_file(filepath_absoluto, mimetype='image/jpeg')
+    except Exception as e:
+        print(f"[DEBUG] Error al servir archivo: {str(e)}")
+        return f"Error al cargar archivo: {str(e)}", 404
 
 
 # ================= LOGIN =================
@@ -371,14 +385,7 @@ def login():
         usuario = cursor.fetchone()
 
         if not usuario:
-            # Verificar si existe pero está pendiente de verificación
-            cursor.execute("SELECT correo, verificado FROM usuarios WHERE correo LIKE %s", (f"%{correo.split('@')[0]}%",))
-            similar = cursor.fetchone()
-            
-            if similar:
-                flash("⚠️ Este correo está registrado pero aún no verificado. Revisa tu email para confirmar.", "warning")
-            else:
-                flash("❌ El correo ingresado no está registrado. ¿Aún no te has registrado?", "danger")
+            flash("❌ El correo ingresado no está registrado. ¿Aún no te has registrado?", "danger")
             cursor.close()
             db.close()
             return redirect(url_for("login"))
@@ -396,14 +403,6 @@ def login():
             cursor.close()
             db.close()
             return redirect(url_for("login"))
-
-        # ⚠️ TEMPORALMENTE DESHABILITADO: Verificación de correo
-        # Si necesitas habilitar de nuevo, descomenta las siguientes líneas:
-        # if not usuario.get("verificado", True):
-        #     cursor.close()
-        #     db.close()
-        #     flash("⏳ Debes verificar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.", "warning")
-        #     return redirect(url_for("verificar_correo", correo=usuario["correo"]))
 
         # Credenciales correctas - Usuario regular
         session["usuario_id"] = usuario["id"]
@@ -440,12 +439,6 @@ def registro():
         if len(password) < 6:
             return render_template("registro.html", error="La contraseña debe tener al menos 6 caracteres")
 
-        if not smtp_configurado():
-            return render_template(
-                "registro.html",
-                error="El envio de correos no esta configurado. Contacta al administrador."
-            )
-
         db = conexion()
         cursor = db.cursor()
 
@@ -456,62 +449,11 @@ def registro():
             db.close()
             return render_template("registro.html", error="Este correo ya está registrado. Inicia sesión.")
 
-        codigo = generar_codigo_verificacion()
-        expira = datetime.now() + timedelta(minutes=15)
-
-        # ⚠️ TEMPORALMENTE: Marcar como verificado=1 automáticamente (sin enviar correo)
+        # Insertar usuario sin verificación de correo
         cursor.execute("""
-            INSERT INTO usuarios (correo, password, rol, estado, verificado, codigo_verificacion, codigo_expira)
-            VALUES (%s, %s, 'alumno', 'pendiente', 1, %s, %s)
-        """, (correo, password, codigo, expira))
-
-        asunto = "🔐 Código de Verificación - Sistema de Emprendedores"
-        cuerpo_html = f"""
-        <html>
-            <body style="font-family: 'Poppins', Arial, sans-serif; line-height: 1.6; color: #333;">
-                <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <div style="background: linear-gradient(135deg, #0f5a8a 0%, #0f3460 100%); padding: 20px; border-radius: 10px; color: white; text-align: center;">
-                        <h1 style="margin: 0;">Sistema de Emprendedores</h1>
-                    </div>
-                    
-                    <div style="background: #f9f9f9; padding: 20px; margin-top: 20px; border-radius: 5px;">
-                        <h2>¡Bienvenido!</h2>
-                        <p>Para completar tu registro en el Sistema de Gestión de Emprendedores, necesitas verificar tu correo electrónico.</p>
-                        
-                        <div style="background: white; padding: 20px; border-left: 4px solid #0f5a8a; margin: 20px 0;">
-                            <p style="margin: 0 0 10px 0; color: #666;">Tu código de verificación es:</p>
-                            <h1 style="margin: 0; font-size: 36px; letter-spacing: 5px; color: #0f5a8a; text-align: center;">{codigo}</h1>
-                        </div>
-                        
-                        <div style="background: #fff3cd; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 5px;">
-                            <p style="margin: 0; color: #856404;">
-                                ⏱️ <strong>Este código expira en 15 minutos.</strong><br>
-                                Si no solicitaste este registro, ignora este correo.
-                            </p>
-                        </div>
-                        
-                        <p style="margin-top: 20px; color: #666; font-size: 12px;">
-                            Este es un mensaje automático. Por favor no respondas a este correo.
-                        </p>
-                    </div>
-                    
-                    <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
-                        <p>© 2026 Sistema de Gestion de Emprendedores - Universidad Tecnológica de Acapulco</p>
-                    </div>
-                </div>
-            </body>
-        </html>
-        """
-
-        # ⚠️ TEMPORALMENTE DESHABILITADO: Envío de correo de verificación
-        # Descomenta estas líneas cuando SMTP esté configurado correctamente:
-        # enviado, error_envio = enviar_correo(correo, asunto, cuerpo_html, html=True)
-        # if not enviado:
-        #     db.rollback()
-        #     cursor.close()
-        #     db.close()
-        #     flash(f"Error al enviar correo: {error_envio}", "danger")
-        #     return render_template("registro.html", correo=correo)
+            INSERT INTO usuarios (correo, password, rol, estado)
+            VALUES (%s, %s, 'alumno', 'pendiente')
+        """, (correo, password))
 
         db.commit()
         cursor.close()
@@ -522,123 +464,6 @@ def registro():
 
 
     return render_template("registro.html")
-
-
-# ================= VERIFICACION CORREO =================
-@app.route("/verificar_correo", methods=["GET", "POST"])
-def verificar_correo():
-    correo = request.args.get("correo") or request.form.get("correo") or ""
-
-    if request.method == "POST":
-        codigo = request.form.get("codigo", "").strip()
-
-        if not correo or not codigo:
-            return render_template("verificar_correo.html", error="Completa todos los campos", correo=correo)
-
-        db = conexion()
-        cursor = db.cursor(dictionary=True)
-
-        cursor.execute("""
-            SELECT id, codigo_verificacion, codigo_expira, verificado
-            FROM usuarios
-            WHERE correo = %s
-        """, (correo,))
-        usuario = cursor.fetchone()
-
-        if not usuario:
-            cursor.close()
-            db.close()
-            return render_template("verificar_correo.html", error="Usuario no encontrado", correo=correo)
-
-        if usuario.get("verificado"):
-            cursor.close()
-            db.close()
-            flash("Tu correo ya estaba verificado. Inicia sesion.", "info")
-            return redirect(url_for("login"))
-
-        if not usuario.get("codigo_verificacion") or codigo != usuario.get("codigo_verificacion"):
-            cursor.close()
-            db.close()
-            return render_template("verificar_correo.html", error="Codigo incorrecto", correo=correo)
-
-        if usuario.get("codigo_expira") and datetime.now() > usuario["codigo_expira"]:
-            cursor.close()
-            db.close()
-            return render_template("verificar_correo.html", error="El codigo ya expiro", correo=correo)
-
-        cursor.execute("""
-            UPDATE usuarios
-            SET verificado = 1, codigo_verificacion = NULL, codigo_expira = NULL
-            WHERE id = %s
-        """, (usuario["id"],))
-        db.commit()
-        cursor.close()
-        db.close()
-
-        flash("Correo verificado correctamente. Ya puedes iniciar sesion.", "success")
-        return redirect(url_for("login"))
-
-    return render_template("verificar_correo.html", correo=correo)
-
-
-@app.route("/reenviar_codigo", methods=["POST"])
-def reenviar_codigo():
-    correo = request.form.get("correo", "").strip()
-
-    if not correo:
-        return render_template("verificar_correo.html", error="Ingresa tu correo", correo=correo)
-
-    db = conexion()
-    cursor = db.cursor(dictionary=True)
-
-    cursor.execute("""
-        SELECT id, verificado
-        FROM usuarios
-        WHERE correo = %s
-    """, (correo,))
-    usuario = cursor.fetchone()
-
-    if not usuario:
-        cursor.close()
-        db.close()
-        return render_template("verificar_correo.html", error="Usuario no encontrado", correo=correo)
-
-    if usuario.get("verificado"):
-        cursor.close()
-        db.close()
-        flash("Tu correo ya esta verificado. Inicia sesion.", "info")
-        return redirect(url_for("login"))
-
-    codigo = generar_codigo_verificacion()
-    expira = datetime.now() + timedelta(minutes=15)
-
-    cursor.execute("""
-        UPDATE usuarios
-        SET codigo_verificacion = %s, codigo_expira = %s
-        WHERE id = %s
-    """, (codigo, expira, usuario["id"]))
-    db.commit()
-    cursor.close()
-    db.close()
-
-    asunto = "Codigo de verificacion"
-    cuerpo = (
-        "Hola,\n\n"
-        "Tu codigo de verificacion es: " + codigo + "\n\n"
-        "Este codigo expira en 15 minutos.\n\n"
-        "Sistema de Gestion de Emprendedores"
-    )
-
-    enviado, _ = enviar_correo(correo, asunto, cuerpo)
-    if not enviado:
-        return render_template(
-            "verificar_correo.html",
-            error="No se pudo reenviar el codigo. Intenta mas tarde.",
-            correo=correo
-        )
-
-    flash("Se envio un nuevo codigo a tu correo.", "success")
-    return redirect(url_for("verificar_correo", correo=correo))
 
 
 # ================= PANEL ADMIN =================
@@ -1034,18 +859,32 @@ def inicio():
 def guardar_archivo(file, usuario_id, tipo="foto"):
     """Guardar archivo subido y retornar la ruta relativa con validación"""
     if not file or file.filename == '':
+        print(f"[DEBUG] archivo vacío o sin nombre: {file}")
         return None, "No se proporcionó archivo"
+    
+    print(f"[DEBUG] Intentando guardar archivo: {file.filename}, tipo: {tipo}, usuario: {usuario_id}")
     
     # Validar el archivo según tipo (todas las fotos se validan como imágenes)
     tipo_validacion = 'imagen' if tipo in ['foto', 'alumno', 'logo_emprendimiento'] or tipo.startswith('integrante_') else 'general'
     es_valido, mensaje = validar_archivo(file, tipo_validacion)
     
+    print(f"[DEBUG] Validación: {es_valido}, Mensaje: {mensaje}")
+    
     if not es_valido:
         return None, mensaje
     
-    # Crear carpeta de uploads si no existe
-    upload_dir = os.path.join(app.config['UPLOAD_FOLDER'], str(usuario_id))
-    os.makedirs(upload_dir, exist_ok=True)
+    # Crear carpeta de uploads con ruta absoluta
+    upload_base = os.path.join(app.root_path, app.config['UPLOAD_FOLDER'])
+    upload_dir = os.path.join(upload_base, str(usuario_id))
+    
+    print(f"[DEBUG] Directorio de uploads: {upload_dir}")
+    
+    try:
+        os.makedirs(upload_dir, exist_ok=True)
+        print(f"[DEBUG] Directorio creado/verificado: {upload_dir}")
+    except Exception as e:
+        print(f"[DEBUG] Error al crear directorio: {str(e)}")
+        return None, f"Error al crear directorio: {str(e)}"
     
     # Sanitizar y generar nombre único para el archivo
     filename_seguro = sanitizar_filename(file.filename)
@@ -1055,10 +894,22 @@ def guardar_archivo(file, usuario_id, tipo="foto"):
     
     filepath = os.path.join(upload_dir, filename)
     
+    print(f"[DEBUG] Guardando en: {filepath}")
+    
     try:
         file.save(filepath)
-        return filepath, "Archivo guardado exitosamente"
+        print(f"[DEBUG] Archivo guardado exitosamente: {filepath}")
+        
+        # Devolver ruta relativa para la base de datos
+        # Convertir a ruta relativa desde el directorio del proyecto
+        relative_path = os.path.relpath(filepath, app.root_path)
+        # Normalizar las barras para que sean consistentes
+        relative_path = relative_path.replace('\\', '/')
+        
+        print(f"[DEBUG] Ruta relativa guardada: {relative_path}")
+        return relative_path, "Archivo guardado exitosamente"
     except Exception as e:
+        print(f"[DEBUG] Error al guardar: {str(e)}")
         return None, f"Error al guardar archivo: {str(e)}"
 
 
@@ -1066,6 +917,11 @@ def guardar_archivo(file, usuario_id, tipo="foto"):
 @login_requerido
 def guardar_formulario():
 
+    print("[DEBUG] === INICIO GUARDAR FORMULARIO ===")
+    print(f"[DEBUG] Usuario ID: {session.get('usuario_id')}")
+    print(f"[DEBUG] Archivos recibidos: {list(request.files.keys())}")
+    print(f"[DEBUG] Datos POST: {list(request.form.keys())}")
+    
     # Validar que el usuario tenga estado pendiente
     if session.get("estado") != "pendiente":
         flash("⚠️ No puedes enviar una nueva solicitud. Tu estado actual es: " + session.get("estado", "desconocido"), "warning")

@@ -291,7 +291,7 @@ class FileValidator {
 // ================= HELPER PARA CONVERTIR FLASH MESSAGES =================
 function convertFlashMessages() {
     // Buscar mensajes flash en el DOM y convertirlos a toasts
-    const flashMessages = document.querySelectorAll('.flash-message, .alert');
+    const flashMessages = document.querySelectorAll('.flash-message, .alert, .message');
     
     flashMessages.forEach(msg => {
         const text = msg.textContent.trim();
@@ -316,11 +316,40 @@ function convertFlashMessages() {
     });
 }
 
+// ================= AUTO-HIDE FLASH MESSAGES =================
+function autoHideFlashMessages() {
+    // Buscar todos los mensajes flash que no se han convertido a toasts
+    const messages = document.querySelectorAll('.message, .flash-message, .alert');
+    
+    messages.forEach(msg => {
+        // Solo aplicar a mensajes visibles
+        if (msg.style.display !== 'none') {
+            // Agregar animación de desvanecimiento
+            msg.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+            
+            // Desaparecer después de 5 segundos
+            setTimeout(() => {
+                msg.style.opacity = '0';
+                msg.style.transform = 'translateY(-20px)';
+                
+                // Remover del DOM después de la animación
+                setTimeout(() => {
+                    msg.remove();
+                }, 500);
+            }, 5000);
+        }
+    });
+}
+
 // Convertir mensajes flash al cargar la página
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', convertFlashMessages);
+    document.addEventListener('DOMContentLoaded', () => {
+        convertFlashMessages();
+        autoHideFlashMessages();
+    });
 } else {
     convertFlashMessages();
+    autoHideFlashMessages();
 }
 
 
@@ -329,3 +358,4 @@ window.Toast = Toast;
 window.AjaxValidator = AjaxValidator;
 window.FileValidator = FileValidator;
 window.convertFlashMessages = convertFlashMessages;
+window.autoHideFlashMessages = autoHideFlashMessages;

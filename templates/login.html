@@ -565,10 +565,6 @@
         <div class="register-link">
             <a href="/registro">Crear Nueva Cuenta</a>
         </div>
-
-        <div class="register-link" style="margin-top: 10px;">
-            <a href="/verificar_correo">Verificar correo</a>
-        </div>
     </div>
 
     <script>
@@ -651,6 +647,25 @@
             if (document.getElementById('password').value) {
                 validarPassword();
             }
+        });
+
+        // Auto-ocultar mensajes flash después de 5 segundos
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message');
+            
+            messages.forEach(msg => {
+                // Agregar animación de desvanecimiento después de 5 segundos
+                setTimeout(() => {
+                    msg.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    msg.style.opacity = '0';
+                    msg.style.transform = 'translateY(-20px)';
+                    
+                    // Remover del DOM después de la animación
+                    setTimeout(() => {
+                        msg.remove();
+                    }, 500);
+                }, 5000);
+            });
         });
     </script>
 

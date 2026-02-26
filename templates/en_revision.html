@@ -304,9 +304,6 @@
         </div>
 
         <div style="display: flex; gap: 10px; margin: 30px 0; flex-direction: column;">
-            <a href="{{ url_for('chat') }}" style="display: inline-block; padding: 14px 25px; background: linear-gradient(135deg, #0f5a8a, #0f3460); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; text-align: center; transition: all 0.3s;">
-                💬 Ir al Chat
-            </a>
             <a href="{{ url_for('estado_solicitud') }}" style="display: inline-block; padding: 14px 25px; background: linear-gradient(135deg, #0f5a8a, #0f3460); color: white; text-decoration: none; border-radius: 10px; font-weight: 600; text-align: center; transition: all 0.3s;">
                 📊 Ver Estado
             </a>
@@ -317,5 +314,26 @@
             <span>Cerrar Sesión</span>
         </a>
     </div>
+
+    <!-- Script para ocultar mensajes automáticamente -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message');
+            
+            messages.forEach(msg => {
+                // Agregar animación de desvanecimiento después de 5 segundos
+                setTimeout(() => {
+                    msg.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    msg.style.opacity = '0';
+                    msg.style.transform = 'translateY(-20px)';
+                    
+                    // Remover del DOM después de la animación
+                    setTimeout(() => {
+                        msg.remove();
+                    }, 500);
+                }, 5000);
+            });
+        });
+    </script>
 </body>
 </html>

@@ -858,6 +858,16 @@
             box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
         }
 
+        .btn-pdf {
+            background: linear-gradient(135deg, #0ea5e9, #0369a1);
+            color: white;
+        }
+
+        .btn-pdf:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(14, 165, 233, 0.4);
+        }
+
         .btn-aceptar {
             background: linear-gradient(135deg, #4cd964, #2ecc71);
             color: white;
@@ -1078,13 +1088,15 @@
             <div class="projects-grid">
                 {% for s in solicitudes %}
                 <div class="project-card project-card-{{ s.estado }}" data-estado="{{ s.estado }}">
-                    <!-- Foto del Proyecto -->
+                    <!-- Logo del Emprendimiento -->
                     <div class="project-image">
-                        {% if s.foto_alumno %}
+                        {% if s.logo_emprendimiento %}
+                            <img src="{{ url_for('descargar_archivo', filepath=s.logo_emprendimiento) }}" alt="{{ s.nombre_proyecto or s.nombre }}">
+                        {% elif s.foto_alumno %}
                             <img src="{{ url_for('descargar_archivo', filepath=s.foto_alumno) }}" alt="{{ s.nombre }}">
                         {% else %}
                             <div class="placeholder-image">
-                                <span>📸</span>
+                                <span>🏢</span>
                             </div>
                         {% endif %}
                         
@@ -1134,6 +1146,10 @@
                             <a class="btn-card btn-ver" href="{{ url_for('ver_solicitud', id=s.id) }}">
                                 <span>👁️</span>
                                 <span>Ver Detalle</span>
+                            </a>
+                            <a class="btn-card btn-pdf" href="{{ url_for('descargar_pdf_admin', id=s.id) }}">
+                                <span>PDF</span>
+                                <span>Descargar</span>
                             </a>
                             {% if s.estado == 'pendiente' %}
                             <button class="btn-card btn-aceptar" onclick="showModal('accept', '{{ url_for('aprobar', id=s.id) }}')">
@@ -1210,5 +1226,26 @@
             </div>
         </div>
     </div>
+
+    <!-- Script para auto-ocultar mensajes flash -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const messages = document.querySelectorAll('.message');
+            
+            messages.forEach(msg => {
+                // Agregar animación de desvanecimiento después de 5 segundos
+                setTimeout(() => {
+                    msg.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                    msg.style.opacity = '0';
+                    msg.style.transform = 'translateY(-20px)';
+                    
+                    // Remover del DOM después de la animación
+                    setTimeout(() => {
+                        msg.remove();
+                    }, 500);
+                }, 5000);
+            });
+        });
+    </script>
 </body>
 </html>
