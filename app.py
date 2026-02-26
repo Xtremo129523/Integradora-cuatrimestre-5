@@ -36,7 +36,7 @@ INSTITUTION_DOMAIN = "@utacapulco.edu.mx"
 SMTP_HOST = "smtp.gmail.com"
 SMTP_PORT = 587
 SMTP_USER = os.getenv("SMTP_USER", "").strip()
-SMTP_PASS = os.getenv("SMTP_PASS", "").strip()
+SMTP_PASS = os.getenv("SMTP_PASS", "").replace(" ", "").strip()  # Remover espacios
 
 def es_correo_institucional(correo):
     return bool(correo) and correo.lower().endswith(INSTITUTION_DOMAIN)
@@ -67,6 +67,8 @@ def enviar_correo(destinatario, asunto, cuerpo, html=False):
     if not smtp_configurado():
         error = "❌ SMTP no configurado. Por favor, establecer SMTP_USER y SMTP_PASS en el archivo .env"
         print(f"Error de correo: {error}")
+        print(f"   SMTP_USER: {SMTP_USER if SMTP_USER else 'NO CONFIGURADO'}")
+        print(f"   SMTP_PASS: {'Configurado' if SMTP_PASS else 'NO CONFIGURADO'}")
         return False, error
     
     if not destinatario or '@' not in destinatario:
@@ -318,7 +320,7 @@ def descargar_archivo(filepath):
 @app.route("/", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        correo = request.form.get("correo", "").strip()
+        correo = request.form.get("correo", "").strip().lower()  # Normalizar a minúsculas
         password = request.form.get("password", "").strip()
 
         # Validación de campos vacíos
@@ -329,8 +331,8 @@ def login():
         db = conexion()
         cursor = db.cursor(dictionary=True)
 
-        # Primero verificar si es un administrador
-        cursor.execute("SELECT * FROM administradores WHERE correo=%s", (correo,))
+        # Primero verificar si es un administrador (case-insensitive)
+        cursor.execute("SELECT * FROM administradores WHERE LOWER(correo)=%s", (correo,))
         admin = cursor.fetchone()
 
         if admin:
@@ -361,15 +363,58 @@ def login():
             flash(f"🔔 Sesión iniciada - Bienvenido, {admin['nombre']}", "success")
             return redirect(url_for("panel_admin"))
 
-        # Si no es admin, verificar si es usuario regular
-        cursor.execute("SELECT * FROM usuarios WHERE correo=%s", (correo,))
+        # Si no es admin, verificar si es usuario regular (case-insensitive)
+        cursor.execute("SELECT * FROM usuarios WHERE LOWER(correo)=%s", (correo,))
         usuario = cursor.fetchone()
 
         if not usuario:
-            flash("El correo ingresado no está registrado", "danger")
+            # Verificar si existe pero está pendiente de verificación
+            cursor.execute("SELECT correo, verificado FROM usuarios WHERE correo LIKE %s", (f"%{correo.split('@')[0]}%",))
+            similar = cursor.fetchone()
+            
+            if similar:
+                flash("⚠️ Este correo está registrado pero aún no verificado. Revisa tu email para confirmar.", "warning")
+            else:
+                flash("❌ El correo ingresado no está registrado. ¿Aún no te has registrado?", "danger")
             cursor.close()
             db.close()
             return redirect(url_for("login"))
+
+        # Verificar correo institucional
+        if not es_correo_institucional(usuario["correo"]):
+            flash("Debes usar un correo institucional (@utacapulco.edu.mx)", "danger")
+            cursor.close()
+            db.close()
+            return redirect(url_for("login"))
+
+        # Verificar la contraseña
+        if usuario["password"] != password:
+            flash("Contraseña incorrecta", "danger")
+            cursor.close()
+            db.close()
+            return redirect(url_for("login"))
+
+        # Verificar si el correo ya fue confirmado
+        if not usuario.get("verificado", True):
+            cursor.close()
+            db.close()
+            flash("⏳ Debes verificar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.", "warning")
+            return redirect(url_for("verificar_correo", correo=usuario["correo"]))
+
+        # Credenciales correctas - Usuario regular
+        session["usuario_id"] = usuario["id"]
+        session["correo"] = usuario["correo"]
+        session["rol"] = usuario["rol"]
+        session["estado"] = usuario["estado"]
+        session["es_admin"] = False
+
+        cursor.close()
+        db.close()
+
+        flash(f"🔔 Sesión iniciada - Bienvenido, {correo}", "success")
+        return redirect(url_for("inicio"))
+
+    return render_template("login.html")
 
         # Verificar correo institucional
         if not es_correo_institucional(usuario["correo"]):
@@ -412,7 +457,7 @@ def login():
 @app.route("/registro", methods=["GET", "POST"])
 def registro():
     if request.method == "POST":
-        correo = request.form.get("correo", "").strip()
+        correo = request.form.get("correo", "").strip().lower()  # Normalizar a minúsculas
         password = request.form.get("password", "").strip()
 
         # Validación de campos vacíos
@@ -436,7 +481,8 @@ def registro():
         db = conexion()
         cursor = db.cursor()
 
-        cursor.execute("SELECT id FROM usuarios WHERE correo=%s", (correo,))
+        # Búsqueda case-insensitive
+        cursor.execute("SELECT id FROM usuarios WHERE LOWER(correo)=%s", (correo,))
         if cursor.fetchone():
             cursor.close()
             db.close()
