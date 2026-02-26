@@ -9,6 +9,9 @@ from functools import wraps
 from email.message import EmailMessage
 import io
 from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import LETTER
+from reportlab.lib.utils import ImageReader
+from reportlab.lib.colors import HexColor
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
@@ -678,6 +681,194 @@ def ver_solicitud(id):
     return render_template("detalle_solicitud_Admin.html", solicitud=solicitud)
 
 
+@app.route("/solicitud/<int:id>/pdf")
+@login_requerido
+@solo_admin
+def descargar_pdf_admin(id):
+    db = conexion()
+    cursor = db.cursor(dictionary=True)
+
+    cursor.execute("""
+        SELECT s.*, u.correo
+        FROM solicitudes s
+        JOIN usuarios u ON s.usuario_id = u.id
+        WHERE s.id=%s
+    """, (id,))
+    solicitud = cursor.fetchone()
+
+    cursor.close()
+    db.close()
+
+    if not solicitud:
+        flash("Solicitud no encontrada", "danger")
+        return redirect(url_for("panel_admin"))
+
+    buffer = io.BytesIO()
+    pdf = canvas.Canvas(buffer, pagesize=LETTER)
+    page_width, page_height = LETTER
+
+    margin_x = 40
+    header_h, footer_h = _pdf_get_membrete_heights(page_width)
+    top_margin = max(130, int(header_h) + 20)
+    bottom_margin = max(85, int(footer_h) + 20)
+    content_width = page_width - (margin_x * 2)
+    start_y = page_height - top_margin
+
+    def new_page():
+        pdf.showPage()
+        _pdf_draw_background(pdf, page_width, page_height)
+        pdf.setFillColor(HexColor("#ffffff"))
+        pdf.rect(margin_x - 10, bottom_margin - 10, content_width + 20, start_y - bottom_margin + 20, fill=1, stroke=0)
+        return start_y
+
+    _pdf_draw_background(pdf, page_width, page_height)
+    pdf.setFillColor(HexColor("#ffffff"))
+    pdf.rect(margin_x - 10, bottom_margin - 10, content_width + 20, start_y - bottom_margin + 20, fill=1, stroke=0)
+    y = start_y
+
+    pdf.setFont("Helvetica-Bold", 14)
+    pdf.setFillColor(HexColor("#0f3460"))
+    pdf.drawString(margin_x, y, "Solicitud de Emprendimiento")
+    pdf.setFont("Helvetica", 9)
+    pdf.setFillColor(HexColor("#333333"))
+    pdf.drawString(margin_x, y - 14, f"Folio: {solicitud.get('id', 'N/A')}  |  Estado: {str(solicitud.get('estado', 'N/A')).upper()}")
+    pdf.drawString(margin_x, y - 28, f"Fecha de solicitud: {solicitud.get('fecha_creacion', 'N/A')}")
+    y -= 50
+
+    y = _pdf_draw_section_title(pdf, "Informacion personal", margin_x, y, content_width)
+    y = _pdf_draw_label_value(pdf, "Nombre:", solicitud.get("nombre"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Correo:", solicitud.get("correo"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Edad:", solicitud.get("edad"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Carrera:", solicitud.get("carrera"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Nivel:", solicitud.get("nivel"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Matricula:", solicitud.get("matricula"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Telefono:", solicitud.get("telefono"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Direccion:", solicitud.get("direccion"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Asesor 1:", solicitud.get("asesor_academico_1"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Asesor 2:", solicitud.get("asesor_academico_2"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Integrantes:", solicitud.get("numero_integrantes"), margin_x, y, content_width, bottom_margin, new_page)
+    y -= 6
+
+    y = _pdf_draw_section_title(pdf, "Informacion del emprendimiento", margin_x, y, content_width)
+    y = _pdf_draw_label_value(pdf, "Proyecto:", solicitud.get("nombre_proyecto"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Idea (7 palabras):", solicitud.get("idea_7_palabras"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Ubicacion:", solicitud.get("ubicacion_emprendimiento"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Inicio:", solicitud.get("fecha_inicio_emprendimiento"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Alta SAT:", solicitud.get("alta_sat"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Personas trabajando:", solicitud.get("personas_trabajando"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Miembros en incubacion:", solicitud.get("miembros_incubacion"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Convocatorias previas:", solicitud.get("convocatorias_previas"), margin_x, y, content_width, bottom_margin, new_page)
+    y -= 6
+
+    y = _pdf_draw_section_title(pdf, "Descripcion del proyecto", margin_x, y, content_width)
+    y = _pdf_draw_paragraph(pdf, solicitud.get("descripcion_proyecto"), margin_x, y, content_width, bottom_margin, new_page)
+    y -= 10
+
+    y = _pdf_draw_section_title(pdf, "Detalle del modelo de negocio", margin_x, y, content_width)
+    y = _pdf_draw_label_value(pdf, "Clientes clave:", solicitud.get("clientes_clave"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Problema:", solicitud.get("problema_resuelve"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Producto o servicio:", solicitud.get("producto_servicio"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Innovacion:", solicitud.get("innovacion"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Creacion de valor:", solicitud.get("creacion_valor"), margin_x, y, content_width, bottom_margin, new_page)
+    y -= 6
+
+    y = _pdf_draw_section_title(pdf, "Informacion del lider", margin_x, y, content_width)
+    y = _pdf_draw_label_value(pdf, "Descripcion:", solicitud.get("descripcion_lider"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Rol:", solicitud.get("rol_emprendimiento"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Habilidades:", solicitud.get("habilidades"), margin_x, y, content_width, bottom_margin, new_page)
+    y = _pdf_draw_label_value(pdf, "Logro destacado:", solicitud.get("logro_destacado"), margin_x, y, content_width, bottom_margin, new_page)
+    y -= 6
+
+    logo_path = _pdf_safe_path(solicitud.get("logo_emprendimiento"))
+    if logo_path:
+        y = _pdf_draw_section_title(pdf, "Logo del emprendimiento", margin_x, y, content_width)
+        if y - 120 < bottom_margin:
+            y = new_page()
+        pdf.drawImage(
+            ImageReader(logo_path),
+            margin_x,
+            y - 100,
+            width=160,
+            height=100,
+            preserveAspectRatio=True,
+            mask="auto"
+        )
+        y -= 120
+
+    photos = [
+        {
+            "path": _pdf_safe_path(solicitud.get("foto_alumno")),
+            "name": solicitud.get("nombre"),
+            "desc": solicitud.get("alumno_descripcion"),
+        },
+        {
+            "path": _pdf_safe_path(solicitud.get("integrante_1_foto")),
+            "name": solicitud.get("integrante_1_nombre"),
+            "desc": solicitud.get("integrante_1_descripcion"),
+        },
+        {
+            "path": _pdf_safe_path(solicitud.get("integrante_2_foto")),
+            "name": solicitud.get("integrante_2_nombre"),
+            "desc": solicitud.get("integrante_2_descripcion"),
+        },
+        {
+            "path": _pdf_safe_path(solicitud.get("integrante_3_foto")),
+            "name": solicitud.get("integrante_3_nombre"),
+            "desc": solicitud.get("integrante_3_descripcion"),
+        },
+        {
+            "path": _pdf_safe_path(solicitud.get("integrante_4_foto")),
+            "name": solicitud.get("integrante_4_nombre"),
+            "desc": solicitud.get("integrante_4_descripcion"),
+        },
+        {
+            "path": _pdf_safe_path(solicitud.get("integrante_5_foto")),
+            "name": solicitud.get("integrante_5_nombre"),
+            "desc": solicitud.get("integrante_5_descripcion"),
+        },
+    ]
+    photos = [p for p in photos if p.get("path") or p.get("name") or p.get("desc")]
+
+    if photos:
+        y = _pdf_draw_section_title(pdf, "Fotos y equipo", margin_x, y, content_width)
+        card_width = (content_width - 20) / 2
+        card_height = 150
+        x_positions = [margin_x, margin_x + card_width + 20]
+        col = 0
+        for item in photos:
+            x = x_positions[col]
+            y = _pdf_draw_photo_card(
+                pdf,
+                item.get("path"),
+                item.get("name"),
+                item.get("desc"),
+                x,
+                y,
+                card_width,
+                card_height,
+                bottom_margin,
+                new_page
+            )
+            if col == 1:
+                y -= card_height + 14
+            col = 1 - col
+        if col == 1:
+            y -= card_height + 14
+
+    pdf.save()
+    buffer.seek(0)
+
+    base_name = solicitud.get("nombre_proyecto") or solicitud.get("nombre") or f"solicitud_{id}"
+    safe_name = sanitizar_filename(str(base_name)) or f"solicitud_{id}"
+
+    return send_file(
+        buffer,
+        as_attachment=True,
+        download_name=f"{safe_name}.pdf",
+        mimetype="application/pdf"
+    )
+
+
 # ================= APROBAR =================
 @app.route("/aprobar/<int:id>")
 @login_requerido
@@ -845,8 +1036,8 @@ def guardar_archivo(file, usuario_id, tipo="foto"):
     if not file or file.filename == '':
         return None, "No se proporcionó archivo"
     
-    # Validar el archivo según tipo
-    tipo_validacion = 'imagen' if tipo == 'foto' else 'general'
+    # Validar el archivo según tipo (todas las fotos se validan como imágenes)
+    tipo_validacion = 'imagen' if tipo in ['foto', 'alumno', 'logo_emprendimiento'] or tipo.startswith('integrante_') else 'general'
     es_valido, mensaje = validar_archivo(file, tipo_validacion)
     
     if not es_valido:
@@ -994,7 +1185,7 @@ def guardar_formulario():
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
                 %s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                %s,%s,%s,'pendiente'
+                %s,%s,%s,%s,%s,'pendiente'
             )
         """, (
             usuario_id,
@@ -1025,6 +1216,8 @@ def guardar_formulario():
             request.form.get("integrante_5_nombre"),
             integrante_5_foto,
             request.form.get("integrante_5_descripcion"),
+            request.form.get("nombre_proyecto"),
+            logo_emprendimiento,
             request.form.get("descripcion"),
             request.form.get("ubicacion"),
             request.form.get("inicio_emprendimiento"),
@@ -1034,8 +1227,6 @@ def guardar_formulario():
             request.form.get("innovacion"),
             request.form.get("valor"),
             request.form.get("idea7"),
-            request.form.get("nombre_proyecto"),
-            logo_emprendimiento,
             request.form.get("trabajadores"),
             request.form.get("convocatoria"),
             request.form.get("lider_descripcion"),
@@ -1078,6 +1269,212 @@ def estado_solicitud():
     db.close()
 
     return render_template("estado_solicitud.html", solicitud=solicitud)
+
+
+def _pdf_safe_path(relative_path):
+    if not relative_path:
+        return None
+    clean_path = str(relative_path).replace("\\", "/")
+    base_dir = os.path.normpath(app.root_path)
+    full_path = os.path.normpath(os.path.join(base_dir, clean_path))
+    if not full_path.startswith(base_dir):
+        return None
+    if os.path.exists(full_path):
+        return full_path
+    return None
+
+
+def _pdf_wrap_text(pdf, text, max_width, font_name, font_size):
+    safe_text = " ".join(str(text or "N/A").split())
+    if not safe_text:
+        return ["N/A"]
+    words = safe_text.split(" ")
+    lines = []
+    current = ""
+    for word in words:
+        candidate = (current + " " + word).strip()
+        if pdf.stringWidth(candidate, font_name, font_size) <= max_width:
+            current = candidate
+        else:
+            if current:
+                lines.append(current)
+            current = word
+    if current:
+        lines.append(current)
+    return lines
+
+
+def _pdf_draw_background(pdf, page_width, page_height):
+    header_path = os.path.join(app.root_path, "static", "membrete_header.png")
+    footer_path = os.path.join(app.root_path, "static", "membrete_footer.png")
+    if os.path.exists(header_path) or os.path.exists(footer_path):
+        if os.path.exists(header_path):
+            header_img = ImageReader(header_path)
+            img_w, img_h = header_img.getSize()
+            scale = page_width / img_w
+            header_h = img_h * scale
+            pdf.drawImage(
+                header_img,
+                0,
+                page_height - header_h,
+                width=page_width,
+                height=header_h,
+                preserveAspectRatio=True,
+                mask="auto"
+            )
+        if os.path.exists(footer_path):
+            footer_img = ImageReader(footer_path)
+            img_w, img_h = footer_img.getSize()
+            scale = page_width / img_w
+            footer_h = img_h * scale
+            pdf.drawImage(
+                footer_img,
+                0,
+                0,
+                width=page_width,
+                height=footer_h,
+                preserveAspectRatio=True,
+                mask="auto"
+            )
+        return
+
+    background_path = os.path.join(app.root_path, "static", "membrete_uta.png")
+    if os.path.exists(background_path):
+        pdf.drawImage(
+            ImageReader(background_path),
+            0,
+            0,
+            width=page_width,
+            height=page_height,
+            preserveAspectRatio=False,
+            mask="auto"
+        )
+        return
+
+    logo_path = os.path.join(app.root_path, "static", "logotipo de l aUTA.jpg")
+    if os.path.exists(logo_path):
+        pdf.drawImage(
+            ImageReader(logo_path),
+            30,
+            page_height - 80,
+            width=120,
+            height=40,
+            preserveAspectRatio=True,
+            mask="auto"
+        )
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.setFillColor(HexColor("#333333"))
+    pdf.drawString(170, page_height - 60, "Universidad Tecnologica de Acapulco")
+    pdf.setFont("Helvetica", 9)
+    pdf.drawString(170, page_height - 75, "Formulario de Solicitud - Emprendedores")
+    pdf.setStrokeColor(HexColor("#cccccc"))
+    pdf.line(30, page_height - 90, page_width - 30, page_height - 90)
+    pdf.line(30, 70, page_width - 30, 70)
+
+
+def _pdf_draw_section_title(pdf, title, x, y, max_width):
+    pdf.setFont("Helvetica-Bold", 11)
+    pdf.setFillColor(HexColor("#0f5a8a"))
+    pdf.drawString(x, y, title)
+    pdf.setStrokeColor(HexColor("#0f5a8a"))
+    pdf.setLineWidth(1)
+    pdf.line(x, y - 3, x + max_width, y - 3)
+    pdf.setFillColor(HexColor("#222222"))
+    return y - 16
+
+
+def _pdf_get_membrete_heights(page_width):
+    header_path = os.path.join(app.root_path, "static", "membrete_header.png")
+    footer_path = os.path.join(app.root_path, "static", "membrete_footer.png")
+    header_h = 0
+    footer_h = 0
+    if os.path.exists(header_path):
+        header_img = ImageReader(header_path)
+        img_w, img_h = header_img.getSize()
+        header_h = img_h * (page_width / img_w)
+    if os.path.exists(footer_path):
+        footer_img = ImageReader(footer_path)
+        img_w, img_h = footer_img.getSize()
+        footer_h = img_h * (page_width / img_w)
+    return header_h, footer_h
+
+
+def _pdf_draw_label_value(pdf, label, value, x, y, max_width, bottom_y, new_page_fn):
+    label_width = 130
+    line_height = 12
+    if y < bottom_y:
+        y = new_page_fn()
+    pdf.setFont("Helvetica-Bold", 9)
+    pdf.setFillColor(HexColor("#0f3460"))
+    pdf.drawString(x, y, label)
+    pdf.setFont("Helvetica", 9)
+    pdf.setFillColor(HexColor("#333333"))
+    value_lines = _pdf_wrap_text(pdf, value, max_width - label_width, "Helvetica", 9)
+    value_x = x + label_width
+    for idx, line in enumerate(value_lines):
+        if y < bottom_y:
+            y = new_page_fn()
+            pdf.setFont("Helvetica-Bold", 9)
+            pdf.setFillColor(HexColor("#0f3460"))
+            pdf.drawString(x, y, label)
+            pdf.setFont("Helvetica", 9)
+            pdf.setFillColor(HexColor("#333333"))
+        pdf.drawString(value_x, y, line)
+        if idx < len(value_lines) - 1:
+            y -= line_height
+    y -= line_height
+    return y
+
+
+def _pdf_draw_paragraph(pdf, text, x, y, max_width, bottom_y, new_page_fn):
+    line_height = 12
+    pdf.setFont("Helvetica", 9)
+    pdf.setFillColor(HexColor("#333333"))
+    lines = _pdf_wrap_text(pdf, text, max_width, "Helvetica", 9)
+    for line in lines:
+        if y < bottom_y:
+            y = new_page_fn()
+            pdf.setFont("Helvetica", 9)
+            pdf.setFillColor(HexColor("#333333"))
+        pdf.drawString(x, y, line)
+        y -= line_height
+    return y
+
+
+def _pdf_draw_photo_card(pdf, image_path, title, desc, x, y, card_width, card_height, bottom_y, new_page_fn):
+    if y - card_height < bottom_y:
+        y = new_page_fn()
+    pdf.setStrokeColor(HexColor("#d9e2ec"))
+    pdf.setLineWidth(1)
+    pdf.setFillColor(HexColor("#ffffff"))
+    pdf.rect(x, y - card_height, card_width, card_height, fill=1, stroke=1)
+    img_height = 90
+    img_width = card_width - 16
+    img_x = x + 8
+    img_y = y - 8 - img_height
+    if image_path:
+        pdf.drawImage(
+            ImageReader(image_path),
+            img_x,
+            img_y,
+            width=img_width,
+            height=img_height,
+            preserveAspectRatio=True,
+            mask="auto"
+        )
+    pdf.setFillColor(HexColor("#0f3460"))
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(x + 8, img_y - 12, (title or "").strip()[:40])
+    pdf.setFillColor(HexColor("#555555"))
+    pdf.setFont("Helvetica", 7)
+    desc_lines = _pdf_wrap_text(pdf, desc, card_width - 16, "Helvetica", 7)
+    desc_y = img_y - 24
+    for line in desc_lines[:3]:
+        if desc_y < y - card_height + 10:
+            break
+        pdf.drawString(x + 8, desc_y, line)
+        desc_y -= 9
+    return y
 
 
 # ================= DESCARGAR DOCUMENTO =================
