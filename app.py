@@ -394,48 +394,13 @@ def login():
             db.close()
             return redirect(url_for("login"))
 
-        # Verificar si el correo ya fue confirmado
-        if not usuario.get("verificado", True):
-            cursor.close()
-            db.close()
-            flash("⏳ Debes verificar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.", "warning")
-            return redirect(url_for("verificar_correo", correo=usuario["correo"]))
-
-        # Credenciales correctas - Usuario regular
-        session["usuario_id"] = usuario["id"]
-        session["correo"] = usuario["correo"]
-        session["rol"] = usuario["rol"]
-        session["estado"] = usuario["estado"]
-        session["es_admin"] = False
-
-        cursor.close()
-        db.close()
-
-        flash(f"🔔 Sesión iniciada - Bienvenido, {correo}", "success")
-        return redirect(url_for("inicio"))
-
-    return render_template("login.html")
-
-        # Verificar correo institucional
-        if not es_correo_institucional(usuario["correo"]):
-            flash("Debes usar un correo institucional (@utacapulco.edu.mx)", "danger")
-            cursor.close()
-            db.close()
-            return redirect(url_for("login"))
-
-        # Verificar la contraseña
-        if usuario["password"] != password:
-            flash("Contraseña incorrecta", "danger")
-            cursor.close()
-            db.close()
-            return redirect(url_for("login"))
-
-        # Verificar si el correo ya fue confirmado
-        if not usuario.get("verificado", True):
-            cursor.close()
-            db.close()
-            flash("Debes verificar tu correo antes de iniciar sesión.", "warning")
-            return redirect(url_for("verificar_correo", correo=correo))
+        # ⚠️ TEMPORALMENTE DESHABILITADO: Verificación de correo
+        # Si necesitas habilitar de nuevo, descomenta las siguientes líneas:
+        # if not usuario.get("verificado", True):
+        #     cursor.close()
+        #     db.close()
+        #     flash("⏳ Debes verificar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.", "warning")
+        #     return redirect(url_for("verificar_correo", correo=usuario["correo"]))
 
         # Credenciales correctas - Usuario regular
         session["usuario_id"] = usuario["id"]
@@ -491,9 +456,10 @@ def registro():
         codigo = generar_codigo_verificacion()
         expira = datetime.now() + timedelta(minutes=15)
 
+        # ⚠️ TEMPORALMENTE: Marcar como verificado=1 automáticamente (sin enviar correo)
         cursor.execute("""
             INSERT INTO usuarios (correo, password, rol, estado, verificado, codigo_verificacion, codigo_expira)
-            VALUES (%s, %s, 'alumno', 'pendiente', 0, %s, %s)
+            VALUES (%s, %s, 'alumno', 'pendiente', 1, %s, %s)
         """, (correo, password, codigo, expira))
 
         asunto = "🔐 Código de Verificación - Sistema de Emprendedores"
@@ -534,20 +500,22 @@ def registro():
         </html>
         """
 
-        enviado, error_envio = enviar_correo(correo, asunto, cuerpo_html, html=True)
-        if not enviado:
-            db.rollback()
-            cursor.close()
-            db.close()
-            flash(f"Error al enviar correo: {error_envio}", "danger")
-            return render_template("registro.html", correo=correo)
+        # ⚠️ TEMPORALMENTE DESHABILITADO: Envío de correo de verificación
+        # Descomenta estas líneas cuando SMTP esté configurado correctamente:
+        # enviado, error_envio = enviar_correo(correo, asunto, cuerpo_html, html=True)
+        # if not enviado:
+        #     db.rollback()
+        #     cursor.close()
+        #     db.close()
+        #     flash(f"Error al enviar correo: {error_envio}", "danger")
+        #     return render_template("registro.html", correo=correo)
 
         db.commit()
         cursor.close()
         db.close()
 
-        flash("✅ Se envió un código de verificación a tu correo. Revisa tu bandeja de entrada.", "success")
-        return redirect(url_for("verificar_correo", correo=correo))
+        flash("✅ Cuenta creada exitosamente. Ya puedes iniciar sesión.", "success")
+        return redirect(url_for("login"))
 
 
     return render_template("registro.html")
