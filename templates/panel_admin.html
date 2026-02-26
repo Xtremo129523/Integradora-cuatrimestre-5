@@ -1135,6 +1135,7 @@
                                 <span>👁️</span>
                                 <span>Ver Detalle</span>
                             </a>
+                            {% if s.estado == 'pendiente' %}
                             <button class="btn-card btn-aceptar" onclick="showModal('accept', '{{ url_for('aprobar', id=s.id) }}')">
                                 <span>✓</span>
                                 <span>Aceptar</span>
@@ -1143,6 +1144,7 @@
                                 <span>✗</span>
                                 <span>Rechazar</span>
                             </button>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
