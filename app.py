@@ -900,6 +900,8 @@ def guardar_formulario():
             cursor.close()
             db.close()
             return redirect(url_for("inicio"))
+        
+        logo_emprendimiento, msg2 = guardar_archivo(request.files.get('logo_emprendimiento'), usuario_id, "logo_emprendimiento")
             
         integrante_1_foto, _ = guardar_archivo(request.files.get('integrante_1_foto'), usuario_id, "integrante_1")
         integrante_2_foto, _ = guardar_archivo(request.files.get('integrante_2_foto'), usuario_id, "integrante_2")
@@ -937,6 +939,8 @@ def guardar_formulario():
                 integrante_5_nombre,
                 integrante_5_foto,
                 integrante_5_descripcion,
+                nombre_proyecto,
+                logo_emprendimiento,
                 descripcion_proyecto,
                 ubicacion_emprendimiento,
                 fecha_inicio_emprendimiento,
@@ -946,7 +950,6 @@ def guardar_formulario():
                 innovacion,
                 creacion_valor,
                 idea_7_palabras,
-                nombre_proyecto,
                 personas_trabajando,
                 convocatorias_previas,
                 descripcion_lider,
@@ -1002,6 +1005,7 @@ def guardar_formulario():
             request.form.get("valor"),
             request.form.get("idea7"),
             request.form.get("nombre_proyecto"),
+            logo_emprendimiento,
             request.form.get("trabajadores"),
             request.form.get("convocatoria"),
             request.form.get("lider_descripcion"),
