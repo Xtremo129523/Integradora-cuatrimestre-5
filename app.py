@@ -893,6 +893,22 @@ def guardar_formulario():
                 db.close()
                 return redirect(url_for("inicio"))
         
+        # Validar trabajadores: máximo 5
+        trabajadores = request.form.get("trabajadores")
+        if trabajadores:
+            try:
+                trab_count = int(trabajadores)
+                if trab_count < 1 or trab_count > 5:
+                    flash("❌ El número de personas debe estar entre 1 y 5.", "danger")
+                    cursor.close()
+                    db.close()
+                    return redirect(url_for("inicio"))
+            except ValueError:
+                flash("❌ El número de personas debe ser un valor numérico válido.", "danger")
+                cursor.close()
+                db.close()
+                return redirect(url_for("inicio"))
+        
         # Guardar archivos con validación
         foto_alumno, msg1 = guardar_archivo(request.files.get('foto_alumno'), usuario_id, "alumno")
         if not foto_alumno and request.files.get('foto_alumno'):
